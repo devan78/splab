@@ -67,8 +67,25 @@ header::after{content:"";position:absolute;inset:0;background:var(--hazard);poin
   background:var(--steel-3);white-space:nowrap;
 }
 .pill b{color:var(--amber);font-weight:700}
-#helpBtn{width:26px;height:26px;border:1px solid var(--line-hot);background:var(--steel-3);color:var(--ink-2);
-  font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:13px;line-height:1;display:grid;place-items:center}
+#menuBtn{width:30px;height:28px;border:1px solid var(--line-hot);background:var(--steel-3);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3.5px;
+  clip-path:polygon(5px 0,100% 0,100% calc(100% - 5px),calc(100% - 5px) 100%,0 100%,0 5px)}
+#menuBtn i{display:block;width:14px;height:2px;background:var(--ink-2)}
+#menuBtn:active i{background:var(--amber)}
+.menu-item{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:var(--steel-2);
+  border:1px solid var(--line);padding:12px 13px;min-height:52px}
+.menu-item:active{border-color:var(--amber)}
+.menu-item>span{min-width:0}
+.menu-item .k{display:block;font-family:"Chakra Petch",sans-serif;font-weight:600;font-size:14px;letter-spacing:.03em}
+.menu-item .v{display:block;font-size:12px;color:var(--ink-3);line-height:1.3;margin-top:2px}
+.menu-item .go{margin-left:auto;color:var(--ink-3);font-size:16px}
+.menu-item.danger{border-color:rgba(255,93,59,.45)}
+.menu-item.danger .k{color:var(--ember)}
+.menu-item.danger:active{border-color:var(--ember)}
+.menu-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:2px}
+.menu-stats>div{background:var(--steel-2);border:1px solid var(--line);padding:7px 9px}
+.menu-stats>div .qv{font-family:"JetBrains Mono",monospace;font-weight:700;font-size:14px;
+  font-variant-numeric:tabular-nums;margin-top:1px}
 
 /* power meter */
 .meter{margin-top:8px}
@@ -239,6 +256,32 @@ nav{border-top:1px solid var(--line);background:var(--steel-2);padding-bottom:en
 .flow{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:6px}
 .arrow{color:var(--ink-3);font-size:12px;margin-inline:1px}
 
+/* ---- guided tour ---- */
+.tut-dim{position:fixed;background:rgba(6,8,11,.80);z-index:70}
+.tut-ring{position:fixed;z-index:71;pointer-events:none;border:2px solid var(--amber);
+  box-shadow:0 0 0 3px rgba(255,154,60,.18),0 0 22px rgba(255,154,60,.30)}
+.tut-ring.pulse{animation:tutpulse 1.6s ease-in-out infinite}
+@keyframes tutpulse{0%,100%{box-shadow:0 0 0 3px rgba(255,154,60,.16),0 0 18px rgba(255,154,60,.22)}
+  50%{box-shadow:0 0 0 6px rgba(255,154,60,.28),0 0 30px rgba(255,154,60,.44)}}
+.tut-card{position:fixed;z-index:72;width:min(364px,calc(100vw - 28px));background:var(--steel-2);
+  border:1px solid var(--line-hot);padding:13px 14px 12px;
+  clip-path:polygon(11px 0,100% 0,100% calc(100% - 11px),calc(100% - 11px) 100%,0 100%,0 11px)}
+.tut-card .step{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.tut-card .step .n{font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--amber);
+  letter-spacing:.06em;font-variant-numeric:tabular-nums}
+.tut-card .step .track{flex:1;height:2px;background:var(--line);position:relative}
+.tut-card .step .track i{position:absolute;inset:0 auto 0 0;background:var(--amber);display:block;transition:width .3s ease}
+.tut-card h4{margin:0 0 4px;font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:15px;
+  letter-spacing:.02em;text-wrap:balance}
+.tut-card p{margin:0;font-size:13.5px;line-height:1.42;color:var(--ink-2)}
+.tut-card p b{color:var(--ink);font-weight:600}
+.tut-card .acts{display:flex;align-items:center;gap:8px;margin-top:11px}
+.tut-card .hint{flex:1;font-family:"Chakra Petch",sans-serif;font-weight:600;font-size:10.5px;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--amber)}
+.tut-card .hint.dim{color:var(--ink-3)}
+.tab.tut-flash{background:rgba(255,154,60,.22)}
+body.tut .toast{bottom:auto;top:14px}
+
 .toast{position:fixed;left:50%;bottom:calc(74px + env(safe-area-inset-bottom));transform:translateX(-50%);
   background:var(--steel-3);border:1px solid var(--line-hot);color:var(--ink);padding:8px 14px;font-size:13px;
   z-index:60;pointer-events:none;max-width:88vw;text-align:center;
@@ -263,7 +306,7 @@ hr.dash{border:none;border-top:1px dashed var(--line);margin:9px 0 0}
       <div class="wordmark">Pocket Foundry<small id="hudSub">Arclight Industries</small></div>
       <div class="hud-right">
         <div class="pill">Tier <b id="hudTier">1</b></div>
-        <button id="helpBtn" aria-label="How to play">?</button>
+        <button id="menuBtn" aria-label="Game menu"><i></i><i></i><i></i></button>
       </div>
     </div>
     <div class="meter">
@@ -636,7 +679,7 @@ function freshState(){
     store:0,
     done:{}, mdep:{}, pdep:{},
     un:{mach:{},rec:{},node:{},feat:{}},
-    phase:0, pts:0, vouch:0, vbought:0, cat:{},
+    phase:0, pts:0, vouch:0, vbought:0, cat:{}, tut:0,
     stats:{playT:0, tapped:0, sunk:0}
   };
   START_MACH.forEach(function(m){ S.un.mach[m]=1; });
@@ -1100,7 +1143,7 @@ function tabHub(){
         fmt(d)+' / '+fmt(m.cost[k])+'</span></div>'+
         '<div class="prog"><i class="'+(d>=m.cost[k]?"done":"")+'" style="width:'+pc+'%"></i></div></div>';
     }
-    s += '<div class="card"><div class="row"><span class="ttl grow">'+esc(m.n)+'</span>'+
+    s += '<div class="card" data-tut="ms-'+m.id+'"><div class="row"><span class="ttl grow">'+esc(m.n)+'</span>'+
          '<span class="pill">T'+m.tier+'</span></div>'+rows+
          '<div class="tags">'+unlockTags(m.un)+'</div>'+
          '<button class="btn wide '+(done?"pri":"")+'" style="margin-top:10px" data-act="mdep" data-id="'+m.id+'">'+
@@ -1179,7 +1222,7 @@ function tabMine(){
   });
   s += '<div class="sec"><div class="sec-head"><h2>Manual Extraction</h2><div class="rule"></div>'+
        '<span class="note">no power</span></div>'+
-       '<div class="card"><div class="sub">Hand-mining bootstraps a factory and restarts a grid that has run '+
+       '<div class="card" data-tut="manual"><div class="sub">Hand-mining bootstraps a factory and restarts a grid that has run '+
        'out of fuel: one unit is enough to bring a generator back and let the miners feed it. '+
        'It will never keep pace with a miner.</div>'+
        '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:9px">'+btns+'</div></div></div>';
@@ -1355,7 +1398,7 @@ function groupCard(rid){
   const outId = Object.keys(R.out)[0];
   const maxOut = R.out[outId]*60/R.t * G.c * G.clk;
   const b = nid();
-  let s = '<div class="card'+(G.on?" lit":"")+'">'+
+  let s = '<div class="card'+(G.on?" lit":"")+'" data-tut="grp-'+rid+'">'+
     '<div class="row" style="align-items:flex-start"><span style="padding-top:2px">'+ico(outId)+'</span>'+
     '<div class="grow"><div class="ttl">'+esc(R.n)+'</div>'+
     '<div class="sub"><span class="mono" id="'+b+'r">'+rt(maxOut*eff)+'</span> / '+rt(maxOut)+
@@ -1412,14 +1455,15 @@ function tabScan(){
   let s = "";
   const rate = scanRate();
 
-  if(!machUnlocked("survey_station")){
-    return '<div class="empty">Surveying opens with the <b>Base Building</b> milestone. '+
-           'Until then you are working the four deposits the drop pod landed on.</div>';
-  }
+  const canSurvey = machUnlocked("survey_station");
 
   /* stations */
   s += '<div class="sec"><div class="sec-head"><h2>Survey Stations</h2><div class="rule"></div>'+
        '<span class="note mono">'+rt(rate)+' scan/s</span></div>';
+  if(!canSurvey)
+    s += '<div class="card tight"><div class="sub">Surveying opens with the <b>Base Building</b> '+
+         'milestone on the Hub. Until then you are working the four deposits the drop pod landed on, '+
+         'and the sectors below are only rumours.</div></div>';
   SCAN_ORDER.forEach(function(k){
     if(!machUnlocked(k)) return;
     const M = MACH[k], c = S.scan[k]||0;
@@ -1432,6 +1476,7 @@ function tabScan(){
 
   /* expedition in flight */
   const sv = S.survey;
+  if(canSurvey){
   s += '<div class="sec"><div class="sec-head"><h2>Expedition</h2><div class="rule"></div></div>';
   if(sv && SECTOR_BY_ID[sv.sec]){
     const sec = SECTOR_BY_ID[sv.sec];
@@ -1465,6 +1510,7 @@ function tabScan(){
     s += '<div class="empty">No expedition out. Pick a sector below and dispatch a survey.</div>';
   }
   s += '</div>';
+  }
 
   /* sectors */
   s += '<div class="sec"><div class="sec-head"><h2>Sectors</h2><div class="rule"></div>'+
@@ -1483,7 +1529,7 @@ function tabScan(){
         const n = NODE_BY_ID[id];
         return '<span class="chip">'+ico(n.res,1)+'<span class="pur '+n.pur+'" style="border:none;padding:0">'+n.pur+'</span></span>';
       }).join("");
-    s += '<div class="card'+(busy?" lit":"")+'"><div class="row" style="align-items:flex-start">'+
+    s += '<div class="card'+(busy?" lit":"")+'" data-tut="sec-'+sec.id+'"><div class="row" style="align-items:flex-start">'+
       '<div class="grow"><div class="ttl">'+esc(sec.n)+'</div>'+
       '<div class="sub">'+esc(sec.d)+'</div></div>'+
       (open ? '<span class="stat '+(next ? "st-off" : hidden ? "st-full" : "st-run")+'">'+
@@ -1497,10 +1543,11 @@ function tabScan(){
         '</span> scan &middot; '+(per>0 ? '<span class="mono">'+dur(sec.effort/per)+'</span> at your current rate'
                                        : 'no survey station built')+'</div>'+
         costList(sec.cost);
-      const can = canAfford(sec.cost) && !S.survey && per > 0;
+      const can = canSurvey && canAfford(sec.cost) && !S.survey && per > 0;
       s += '<div class="row" style="margin-top:9px;gap:7px">'+
         '<button class="btn grow '+(can?"pri":"")+'" data-act="dispatch" data-id="'+sec.id+'"'+
         (can?"":" disabled")+'>'+(busy ? "Surveying" :
+          !canSurvey ? "Needs Base Building" :
           S.survey ? "Expedition already out" :
           per <= 0 ? "Build a survey station" :
           !canAfford(sec.cost) ? "Not enough supplies" : "Dispatch survey")+'</button>';
@@ -1529,7 +1576,7 @@ function tabPower(){
   const pct = RT.capMW > 0 ? Math.min(100, RT.demandMW/RT.capMW*100) : (RT.demandMW>0?100:0);
   let s = '<div class="sec"><div class="sec-head"><h2>Grid</h2><div class="rule"></div>'+
     '<span class="note">satisfaction <span class="mono" id="pwSat">'+Math.round(RT.sat*100)+'%</span></span></div>'+
-    '<div class="card lit"><div class="row"><div class="grow">'+
+    '<div class="card lit" data-tut="grid"><div class="row"><div class="grow">'+
     '<div class="lbl">Draw / Capacity</div>'+
     '<div class="ttl mono" style="font-size:19px;margin-top:2px" id="pwNum">'+
       mw(RT.demandMW)+' / '+mw(RT.capMW)+'</div></div>'+
@@ -1660,14 +1707,13 @@ function tabDepot(){
   });
   s += '<div class="sec"><div class="sec-head"><h2>Inventory</h2><div class="rule"></div>'+
     '<span class="note">buffer '+fmt(solidCap())+' / '+fmt(fluidCap())+'</span></div>'+
-    '<div class="inv">'+shown.map(function(i){ return slotFor(i); }).join("")+'</div></div>';
+    '<div class="inv" data-tut="inv">'+shown.map(function(i){ return slotFor(i); }).join("")+'</div></div>';
 
   /* system */
   s += '<div class="sec"><div class="sec-head"><h2>Save</h2><div class="rule"></div></div>'+
     '<div class="card tight"><div class="sub">Progress is stored in this browser and keeps running for up to '+
-    'four hours while the page is closed.</div>'+
-    '<div class="row" style="margin-top:9px;gap:7px"><button class="btn sm grow" data-act="backup">Backup code</button>'+
-    '<button class="btn sm grow" data-act="reset">New save</button></div></div></div>';
+    'four hours while the page is closed. Backups, the tour and a new game all live in the menu.</div>'+
+    '<button class="btn wide" data-act="menu" style="margin-top:9px">Open game menu</button></div></div>';
   return s;
 }
 function slotFor(i){
@@ -1884,6 +1930,12 @@ document.addEventListener("click", function(e){
     }
     case "svrepeat": if(S.survey) S.survey.repeat = S.survey.repeat ? 0 : 1; render(); return;
     case "blast": S.blast = S.blast ? 0 : 1; render(); return;
+    case "close": closeSheet(); return;
+    case "help": closeSheet(); openHelp(); return;
+    case "menu": openMenu(); return;
+    case "tutnext": tutNext(); return;
+    case "tutskip": tutStop(); toast("Tour skipped - replay it from the menu"); return;
+    case "tutstart": closeSheet(); tutStart(); return;
     case "backup": openBackup(); return;
     case "reset": openReset(); return;
   }
@@ -1955,16 +2007,37 @@ function openBackup(){
     });
 }
 function openReset(){
-  sheet("Start a new save",
-    '<p>This erases the current factory and starts again from the drop pod. There is no undo, so take a '+
-    '<b>backup code</b> first if you might want it back.</p>'+
-    '<button class="btn wide pri" id="rsGo">Erase and start over</button>',
+  sheet("New game",
+    '<p>This erases the current factory and starts again from the drop pod, tour and all. There is no '+
+    'undo, so take a <b>backup code</b> first if you might want it back.</p>'+
+    '<button class="btn wide pri" id="rsGo">Erase and start over</button>'+
+    '<button class="btn wide ghost" data-act="menu">Back to the menu</button>',
     function(root){
       root.querySelector("#rsGo").addEventListener("click", function(){
         S = freshState(); save(); closeSheet(); TAB = "hub"; syncTabs(); render();
-        toast("New save started");
+        tutStart();
       });
     });
+}
+function openMenu(){
+  const mapped = Object.keys(S.found).length;
+  const item = function(act, k, v, cls){
+    return '<button class="menu-item'+(cls?" "+cls:"")+'" data-act="'+act+'">'+
+      '<span><span class="k">'+k+'</span><span class="v">'+v+'</span></span>'+
+      '<span class="go">&rsaquo;</span></button>';
+  };
+  sheet("Game Menu",
+    item("close","Resume","Back to the factory")+
+    item("tutstart","Play the tour","Two minutes on the interface and the loop")+
+    item("help","How it runs","Rates, buffers, power, byproducts")+
+    item("backup","Backup or restore","Move this factory to another browser")+
+    item("reset","New game","Wipe everything and start from the drop pod","danger")+
+    '<div class="menu-stats">'+
+      '<div><div class="lbl">Uptime</div><div class="qv">'+dur(S.stats.playT)+'</div></div>'+
+      '<div><div class="lbl">Tier</div><div class="qv">'+Math.min(maxTier(),8)+'</div></div>'+
+      '<div><div class="lbl">Deposits</div><div class="qv">'+mapped+' / '+NODES.length+'</div></div>'+
+      '<div><div class="lbl">Machines</div><div class="qv">'+countMachines()+'</div></div>'+
+    '</div>');
 }
 function openHelp(){
   sheet("How it runs",
@@ -1987,11 +2060,12 @@ function openHelp(){
     'discovered by dispatching a survey from the Scan tab: stations clear a sector\'s effort, each expedition '+
     'returns one deposit and a supply cache, and a resource you have never seen before also teaches you how '+
     'to process it. Sulfur gives compacted coal, which is worth more than twice a lump of coal in a generator.</p>'+
+    '<button class="btn wide pri" data-act="tutstart" style="margin-bottom:4px">Replay the two-minute tour</button>'+
     '<p><b>The loop.</b> Complete Hub milestones to unlock buildings, recipes and survey range. Deliver elevator '+
     'phases to open the next tier band. Sink surplus parts for points, redeem points for vouchers, and spend '+
     'vouchers on alternate recipes with far better ratios.</p>');
 }
-document.getElementById("helpBtn").addEventListener("click", openHelp);
+document.getElementById("menuBtn").addEventListener("click", openMenu);
 
 /* ============================================================
    RENDER LOOP
@@ -2021,6 +2095,7 @@ function render(top){
   LIVE = out;
   main.scrollTop = sc;
   tickUI();
+  if(TUT.on) tutPlace();
 }
 function tickUI(){
   for(let i=0; i<LIVE.length; i++) LIVE[i].fn(LIVE[i].el);
@@ -2065,6 +2140,7 @@ function updateHud(){
   hudSub.textContent = S.phase >= 4 ? "Project Ascent complete" : "Arclight Industries";
 }
 
+addEventListener("resize", function(){ tutPlace(); });
 let lastScroll = 0;
 main.addEventListener("scroll", function(){ lastScroll = Date.now(); }, {passive:true});
 
@@ -2078,9 +2154,10 @@ setInterval(function(){
   if(dt > OFFLINE_CAP) dt = OFFLINE_CAP;
   advance(dt);
   tickUI();
+  tutSync();
   sinceRender += dt;
   if(RT.needRender){ RT.needRender = 0; sinceRender = 0; render(); }
-  else if(sinceRender > 4 && !dragging && !document.querySelector(".scrim") && Date.now()-lastScroll > 1200){
+  else if(sinceRender > 4 && !dragging && !TUT.on && !document.querySelector(".scrim") && Date.now()-lastScroll > 1200){
     sinceRender = 0; render();
   }
 }, 200);
@@ -2092,17 +2169,225 @@ document.addEventListener("visibilitychange", function(){
 window.addEventListener("pagehide", save);
 
 /* ============================================================
+   GUIDED TOUR
+   Twelve steps over the live game - no scripted fakes, no handouts.
+   The dismantle/rebuild pair works because refunds are 100%, so a new
+   player learns the build controls without spending anything.
+   ============================================================ */
+const TUT = {on:0, i:0, ctx:{}, els:null, t0:0};
+
+function firstGroup(){
+  if(S.groups.iron_rod) return "iron_rod";
+  for(const r in S.groups) if(S.groups[r].c > 0) return r;
+  return null;
+}
+const STEPS = [
+  {t:"Welcome to the foundry",
+   d:"You have one miner, one smelter and one constructor. Everything here is measured "+
+     "<b>per minute</b> - match the rates and the factory runs itself. About two minutes.",
+   hint:"Tap next"},
+
+  {tab:"make", skip:function(){ return !TUT.ctx.g; },
+   sel:function(){ const g=TUT.ctx.g; return g?'[data-tut="grp-'+g+'"]':null; },
+   t:"A machine is a rate",
+   d:"Your miner pulls <b>60 iron ore a minute</b>. This card shows what goes in, what comes out, and "+
+     "the bar underneath is what it is actually managing right now.",
+   hint:"Tap next"},
+
+  {tab:"make", skip:function(){ return !TUT.ctx.g; },
+   sel:function(){ const g=TUT.ctx.g; return g?'[data-act="g:'+g+'-"]':null; },
+   t:"Take it apart",
+   d:"Tap the minus. Dismantling always refunds <b>100% of the build cost</b>, so rearranging your "+
+     "factory never costs you materials - only the time it was not running.",
+   hint:"Tap the minus button",
+   done:function(){ const g=TUT.ctx.g; return groupCount(g) < TUT.ctx.c; }},
+
+  {tab:"make", keepSheet:1, skip:function(){ return !TUT.ctx.g; },
+   sel:function(){ const g=TUT.ctx.g; return g?'[data-act="pick"][data-m="'+RECIPES[g].m+'"]':null; },
+   t:"New production lives here",
+   d:"That machine is gone from the list and its parts are back in your depot. "+
+     "Open this to build one again.",
+   hint:"Tap add production",
+   done:function(){ return !!document.querySelector(".scrim"); }},
+
+  {tab:"make", keepSheet:1, skip:function(){ return !TUT.ctx.g; },
+   sel:function(){ const g=TUT.ctx.g; return g?'.sheet-b [data-act="gadd"][data-id="'+g+'"]':null; },
+   t:"Read the ratios, then build",
+   d:"Every recipe lists its exact rates. <b>30 iron ingot to 20 iron plate</b> means three smelters "+
+     "feed two plate constructors precisely. Tap this one to put your constructor back.",
+   hint:"Tap the recipe",
+   done:function(){ const g=TUT.ctx.g; return groupCount(g) >= TUT.ctx.c; }},
+
+  {tab:"depot", sel:'[data-tut="inv"]',
+   t:"Green good, red bad",
+   d:"Each item shows its stock and its <b>net rate</b>. Red means you are consuming it faster than you "+
+     "make it. The thin bar is the buffer - when it fills, whatever produces it backs up and stops.",
+   hint:"Tap next"},
+
+  {tab:"power", sel:'[data-tut="grid"]',
+   t:"Power never trips",
+   d:"If draw passes capacity nothing shuts off - <b>every machine slows to the share it can get</b>. "+
+     "Burn leaves early, convert them to biomass for triple the energy, then get to coal.",
+   hint:"Tap next"},
+
+  {tab:"mine", sel:'[data-act="tap"][data-id="iron_ore"]',
+   t:"You can always dig by hand",
+   d:"Tap it. Hand-mining will never keep pace with a miner, but it bootstraps you at the start and "+
+     "restarts a grid that has run out of fuel.",
+   hint:"Tap to mine",
+   pre:function(){ TUT.ctx.tap = S.stats.tapped; },
+   done:function(){ return S.stats.tapped > TUT.ctx.tap; }},
+
+  {tab:"scan", sel:'[data-tut="sec-rust"]',
+   t:"The map starts empty",
+   d:"You landed on four deposits. Every other one - and resources you have not seen yet - is found by "+
+     "<b>dispatching surveys</b> from here, once you have built a survey station.",
+   hint:"Tap next"},
+
+  {tab:"hub", sel:'[data-tut="ms-m_base"]',
+   t:"The hub pays for progress",
+   d:"Deposit parts here to unlock buildings, recipes and survey range. Delivering an "+
+     "<b>elevator phase</b> opens a whole new tier band. This one is your next job.",
+   hint:"Tap next"},
+
+  {t:"That is the loop",
+   d:"Mine it, smelt it, build it, feed the hub, survey for more. The <b>menu</b> button at the top has "+
+     "the details, and a new game, whenever you want them.",
+   hint:"Finish"}
+];
+
+function tutStart(){
+  TUT.on = 1; TUT.i = 0; TUT.t0 = Date.now();
+  /* pin the machine the build steps will use up front, so a replay works on
+     whatever factory the player already has - or skips those steps entirely */
+  const g = firstGroup();
+  TUT.ctx = {g:g, c: g ? S.groups[g].c : 0};
+  document.body.classList.add("tut");
+  closeSheet();
+  tutShow();
+}
+function tutStop(){
+  TUT.on = 0;
+  document.body.classList.remove("tut");
+  tutClear();
+  S.tut = 1; save();
+  render();
+}
+function tutClear(){
+  const o = document.getElementById("tutLayer");
+  if(o) o.remove();
+  TUT.els = null;
+}
+function tutNext(){
+  const st = STEPS[TUT.i];
+  if(st && !st.keepSheet) closeSheet();
+  TUT.i++;
+  if(TUT.i >= STEPS.length){ tutStop(); toast("Tour complete - build something"); return; }
+  tutShow();
+}
+function tutShow(){
+  while(TUT.i < STEPS.length && STEPS[TUT.i].skip && STEPS[TUT.i].skip()) TUT.i++;
+  const st = STEPS[TUT.i];
+  if(!st){ tutStop(); return; }
+  if(st.tab && TAB !== st.tab){
+    TAB = st.tab; syncTabs(); main.scrollTop = 0; render(true);
+    const b = document.querySelector('.tab[data-tab="'+st.tab+'"]');
+    if(b){ b.classList.add("tut-flash"); setTimeout(function(){ b.classList.remove("tut-flash"); }, 1400); }
+  }
+  if(st.pre) st.pre();
+  tutClear();
+  const l = document.createElement("div");
+  l.id = "tutLayer";
+  l.innerHTML = '<div class="tut-dim" data-d="t"></div><div class="tut-dim" data-d="b"></div>'+
+    '<div class="tut-dim" data-d="l"></div><div class="tut-dim" data-d="r"></div>'+
+    '<div class="tut-ring pulse" hidden></div>'+
+    '<div class="tut-card"><div class="step"><span class="n">'+(TUT.i+1)+' / '+STEPS.length+'</span>'+
+    '<span class="track"><i style="width:'+((TUT.i+1)/STEPS.length*100)+'%"></i></span></div>'+
+    '<h4>'+st.t+'</h4><p>'+st.d+'</p>'+
+    '<div class="acts"><span class="hint'+(st.done?"":" dim")+'">'+(st.hint||"Tap next")+'</span>'+
+    '<button class="btn sm ghost" data-act="tutskip">Skip</button>'+
+    (st.done ? '' : '<button class="btn sm pri" data-act="tutnext">'+
+      (TUT.i === STEPS.length-1 ? "Finish" : "Next")+'</button>')+
+    '</div></div>';
+  document.body.appendChild(l);
+  TUT.stepT = Date.now();
+  TUT.els = {
+    layer:l,
+    dim:{t:l.querySelector('[data-d="t"]'), b:l.querySelector('[data-d="b"]'),
+         le:l.querySelector('[data-d="l"]'), r:l.querySelector('[data-d="r"]')},
+    ring:l.querySelector(".tut-ring"),
+    card:l.querySelector(".tut-card")
+  };
+  tutPlace();
+}
+function tutTarget(){
+  const st = STEPS[TUT.i];
+  if(!st || !st.sel) return null;
+  const sel = typeof st.sel === "function" ? st.sel() : st.sel;
+  if(!sel) return null;
+  return document.querySelector(sel);
+}
+/* Four dimmers around the target rather than one panel on top of it, so the
+   control the step is talking about stays tappable. */
+function tutPlace(){
+  if(!TUT.on || !TUT.els) return;
+  const E = TUT.els, vw = innerWidth, vh = innerHeight, pad = 5;
+  const el = tutTarget();
+  const px = function(n){ return Math.max(0, Math.round(n))+"px"; };
+  if(!el){
+    E.ring.hidden = true;
+    E.dim.t.style.cssText = "left:0;top:0;width:"+px(vw)+";height:"+px(vh);
+    ["b","le","r"].forEach(function(k){ E.dim[k].style.cssText = "width:0;height:0"; });
+    E.card.style.left = px((vw - E.card.offsetWidth)/2);
+    E.card.style.top  = px((vh - E.card.offsetHeight)/2);
+    return;
+  }
+  const r = el.getBoundingClientRect();
+  const T = Math.max(0, r.top - pad), B = Math.min(vh, r.bottom + pad);
+  const L = Math.max(0, r.left - pad), R = Math.min(vw, r.right + pad);
+  E.ring.hidden = false;
+  E.ring.style.cssText = "left:"+px(L)+";top:"+px(T)+";width:"+px(R-L)+";height:"+px(B-T);
+  E.dim.t.style.cssText  = "left:0;top:0;width:"+px(vw)+";height:"+px(T);
+  E.dim.b.style.cssText  = "left:0;top:"+px(B)+";width:"+px(vw)+";height:"+px(vh-B);
+  E.dim.le.style.cssText = "left:0;top:"+px(T)+";width:"+px(L)+";height:"+px(B-T);
+  E.dim.r.style.cssText  = "left:"+px(R)+";top:"+px(T)+";width:"+px(vw-R)+";height:"+px(B-T);
+  const cw = E.card.offsetWidth, ch = E.card.offsetHeight;
+  let top;
+  if(B + 10 + ch <= vh - 8) top = B + 10;
+  else if(T - 10 - ch >= 8) top = T - 10 - ch;
+  else top = Math.max(8, Math.min(vh - ch - 8, 8));
+  E.card.style.left = px(Math.max(8, Math.min(vw - cw - 8, r.left + r.width/2 - cw/2)));
+  E.card.style.top  = px(top);
+}
+/* driven from the tick: keeps the spotlight glued to a re-rendered target */
+function tutSync(){
+  if(!TUT.on) return;
+  const st = STEPS[TUT.i];
+  if(st && st.done && st.done()){ tutNext(); return; }
+  /* nobody should be trapped by a step they cannot satisfy */
+  if(st && st.done && TUT.els && Date.now() - TUT.stepT > 12000 &&
+     !TUT.els.card.querySelector('[data-act="tutnext"]')){
+    const b = document.createElement("button");
+    b.className = "btn sm pri"; b.setAttribute("data-act","tutnext"); b.textContent = "Skip step";
+    TUT.els.card.querySelector(".acts").appendChild(b);
+  }
+  tutPlace();
+}
+
+/* ============================================================
    BOOT
    ============================================================ */
 function start(hot){
   let loaded = null;
   if(hot && hot.save){ try{ loaded = JSON.parse(hot.save); }catch(e){} }
   if(!loaded) loaded = load();
+  const fresh = !loaded;
   if(loaded) S = loaded;
   const away = applyOffline();
   advance(1);
   syncTabs(); render(true);
-  if(away && away.gained.length){
+  if(fresh && !S.tut){ tutStart(); return; }
+  if(away && away.gained.length && !TUT.on){
     sheet("While you were away",
       '<p>The factory ran for <b>'+dur(away.sec)+'</b> and produced:</p>'+
       '<div class="inv">'+away.gained.map(function(g){

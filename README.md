@@ -28,6 +28,21 @@ balancing throughput rather than routing.
   and the refinery stops
 - Offline production for up to four hours, local save, portable backup codes
 
+## Getting started
+
+A new save opens straight into an **11-step guided tour** that runs on the live
+game, not a scripted mock-up. It measures ~2.2 minutes of reading plus a tap per
+step, and it is skippable at any point.
+
+The build lesson costs nothing, which is the trick that makes it work: because
+dismantling refunds 100%, the tour has you take your constructor apart and
+rebuild it through the recipe picker. You learn the steppers, the refund rule
+and the picker, and finish with exactly the factory you started with.
+
+Everything meta lives in the **game menu** (the button top right): resume,
+replay the tour, how it runs, backup or restore a save, and **New game**, which
+wipes the factory and drops you back at the pod with the tour running.
+
 ## Exploration
 
 You land on four deposits. Every other one is found by dispatching a survey from
@@ -50,7 +65,7 @@ deposits into range. Surveys run offline like everything else.
 
 ## Verification
 
-Four suites run against the build:
+Five suites run against the build:
 
 1. **Integrity and balance** - reference validity, the unlock graph, progression
    reachability band by band, 38 recipe rate assertions, generator burn rates
@@ -58,8 +73,11 @@ Four suites run against the build:
    scaling, byproduct clogging, fuel exhaustion, offline/realtime drift,
    deadlock recovery, survey completion, repeat surveying, blasting, and v1
    save migration
-3. **UI interactions** - every control on every tab driven in a real browser
-4. **Soak** - hundreds of random control activations, then a save/reload round
+3. **Tutorial** - walks all 11 steps, asserting every spotlight finds a visible
+   target, no coach card covers the control it points at, the tour ends clean,
+   does not nag on reload, and replays correctly mid-game on a different factory
+4. **UI interactions** - every control on every tab driven in a real browser
+5. **Soak** - hundreds of random control activations, then a save/reload round
    trip, checking for NaN, negative stock, corrupt state and stalls
 
 Bugs these caught, in order of severity:
@@ -76,3 +94,10 @@ Bugs these caught, in order of severity:
 - **Three material-loss paths** - dismantling into a full buffer, refunding a
   miner upgrade, and hand-crafting with no room for the output all silently
   destroyed items.
+- **A tour step nobody could finish.** The hand-mine step waited on ore *stock*
+  rising, so a player replaying it with a full ore buffer was trapped forever.
+  It counts the tap now, and any action step grows a "skip step" button after
+  twelve seconds.
+- **The Scan tab was empty before its first unlock**, so there was nothing to
+  point at and no sense of what was out there. Sectors are always listed now,
+  with dispatch disabled until Base Building.
