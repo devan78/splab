@@ -207,10 +207,10 @@ select{font:inherit;font-size:13px;background:var(--steel-3);color:var(--ink);bo
 
 /* nav */
 nav{border-top:1px solid var(--line);background:var(--steel-2);padding-bottom:env(safe-area-inset-bottom)}
-.navin{max-width:600px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
+.navin{max-width:600px;margin:0 auto;display:grid;grid-template-columns:repeat(6,1fr)}
 .tab{padding:8px 2px 9px;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--ink-3);
   border-top:2px solid transparent;position:relative}
-.tab span{font-family:"Chakra Petch",sans-serif;font-weight:600;font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+.tab span{font-family:"Chakra Petch",sans-serif;font-weight:600;font-size:9.5px;letter-spacing:.07em;text-transform:uppercase}
 .tab .g{width:17px;height:17px;background:currentColor}
 .tab[aria-selected="true"]{color:var(--amber);border-top-color:var(--amber);background:rgba(255,154,60,.06)}
 .tab .dot{position:absolute;top:5px;right:calc(50% - 18px);width:6px;height:6px;background:var(--amber);border-radius:50%}
@@ -219,6 +219,7 @@ nav{border-top:1px solid var(--line);background:var(--steel-2);padding-bottom:en
 .g-make{clip-path:polygon(0 100%,0 42%,26% 42%,26% 20%,52% 42%,52% 20%,78% 42%,78% 0,100% 0,100% 100%)}
 .g-pow{clip-path:polygon(58% 0,10% 56%,44% 56%,34% 100%,90% 40%,54% 40%)}
 .g-dep{clip-path:polygon(0 22%,50% 0,100% 22%,100% 100%,0 100%)}
+.g-scan{clip-path:polygon(50% 0,60% 40%,100% 50%,60% 60%,50% 100%,40% 60%,0 50%,40% 40%)}
 
 /* sheet */
 .scrim{position:fixed;inset:0;background:rgba(5,7,9,.72);z-index:40;display:flex;align-items:flex-end;justify-content:center}
@@ -284,6 +285,7 @@ hr.dash{border:none;border-top:1px dashed var(--line);margin:9px 0 0}
     <button class="tab" role="tab" data-tab="hub"   aria-selected="true"><i class="g g-hub"></i><span>Hub</span></button>
     <button class="tab" role="tab" data-tab="mine"  aria-selected="false"><i class="g g-mine"></i><span>Mine</span></button>
     <button class="tab" role="tab" data-tab="make"  aria-selected="false"><i class="g g-make"></i><span>Make</span></button>
+    <button class="tab" role="tab" data-tab="scan"  aria-selected="false"><i class="g g-scan"></i><span>Scan</span></button>
     <button class="tab" role="tab" data-tab="power" aria-selected="false"><i class="g g-pow"></i><span>Power</span></button>
     <button class="tab" role="tab" data-tab="depot" aria-selected="false"><i class="g g-dep"></i><span>Depot</span></button>
   </div>
@@ -305,6 +307,8 @@ const ITEMS = {
   limestone:{n:"Limestone",k:"raw",c:"#cdbb98",p:2},
   coal:{n:"Coal",k:"raw",c:"#454b55",p:3},
   caterium_ore:{n:"Caterium Ore",k:"raw",c:"#e8c257",p:7},
+  sulfur:{n:"Sulfur",k:"raw",c:"#e3d24a",p:11},
+  raw_quartz:{n:"Raw Quartz",k:"raw",c:"#b89fd6",p:15},
   leaves:{n:"Leaves",k:"raw",c:"#6fbf5a",p:3},
   wood:{n:"Wood",k:"raw",c:"#8a6a3c",p:30},
   biomass:{n:"Biomass",k:"part",c:"#7a8f4a",p:12},
@@ -346,6 +350,12 @@ const ITEMS = {
   computer:{n:"Computer",k:"part",c:"#5cc8f5",p:17260},
   hmf:{n:"Heavy Modular Frame",k:"part",c:"#8d7fae",p:9004},
 
+  compacted_coal:{n:"Compacted Coal",k:"part",c:"#2f333a",p:28},
+  black_powder:{n:"Black Powder",k:"part",c:"#6e6152",p:14},
+  silica:{n:"Silica",k:"part",c:"#d8cfc0",p:20},
+  quartz_crystal:{n:"Quartz Crystal",k:"part",c:"#c9a8e0",p:50},
+  crystal_oscillator:{n:"Crystal Oscillator",k:"part",c:"#9d7fd4",p:3072},
+
   smart_plating:{n:"Smart Plating",k:"proj",c:"#78d16b",p:1892},
   versatile_framework:{n:"Versatile Framework",k:"proj",c:"#ffc94d",p:2804},
   automated_wiring:{n:"Automated Wiring",k:"proj",c:"#ff8a5c",p:3904},
@@ -371,14 +381,17 @@ const MACH = {
   biomass_burner:{n:"Biomass Burner",mw:-30,cost:{iron_plate:15,iron_rod:15,wire:25},
     fuels:["leaves","wood","biomass","solid_biofuel"]},
   coal_generator:{n:"Coal Generator",mw:-75,cost:{rip:20,rotor:10,cable:30},
-    fuels:["coal","petroleum_coke"],water:45},
+    fuels:["coal","compacted_coal","petroleum_coke"],water:45},
   fuel_generator:{n:"Fuel Generator",mw:-150,cost:{computer:15,hmf:50,motor:50,rubber:50},
     fuels:["fuel"]},
   storage_container:{n:"Storage Container",mw:0,cost:{iron_plate:10,iron_rod:10}},
+  survey_station:{n:"Survey Station",mw:20,cost:{iron_plate:30,cable:20,concrete:40},scan:1},
+  survey_station_2:{n:"Survey Station Mk.2",mw:50,cost:{crystal_oscillator:5,computer:5,steel_pipe:60},scan:4},
   resource_sink:{n:"Resource Sink",mw:30,cost:{rip:15,cable:30,concrete:45},base:120}
 };
 /* fuel energy in MJ -> burn/min = 60 * MW / MJ */
-const FUEL_MJ = {leaves:30,wood:100,biomass:180,solid_biofuel:450,coal:300,petroleum_coke:180,fuel:750};
+const FUEL_MJ = {leaves:30,wood:100,biomass:180,solid_biofuel:450,coal:300,compacted_coal:630,
+                 petroleum_coke:180,fuel:750};
 
 /* ---------- RECIPES ---------- */
 /* t: cycle seconds. in/out quantities per cycle. alt: requires catalog purchase. */
@@ -415,6 +428,13 @@ const RECIPES = {
   versatile_framework:{n:"Versatile Framework",m:"assembler",t:24,in:{modular_frame:1,steel_beam:12},out:{versatile_framework:2}},
   automated_wiring:{n:"Automated Wiring",m:"assembler",t:24,in:{stator:1,cable:20},out:{automated_wiring:1}},
 
+  compacted_coal:{n:"Compacted Coal",m:"assembler",t:12,in:{coal:5,sulfur:5},out:{compacted_coal:5}},
+  black_powder:{n:"Black Powder",m:"assembler",t:4,in:{coal:1,sulfur:1},out:{black_powder:2}},
+  silica:{n:"Silica",m:"constructor",t:8,in:{raw_quartz:3},out:{silica:5}},
+  quartz_crystal:{n:"Quartz Crystal",m:"constructor",t:8,in:{raw_quartz:5},out:{quartz_crystal:3}},
+  crystal_oscillator:{n:"Crystal Oscillator",m:"manufacturer",t:120,
+    in:{quartz_crystal:36,cable:28,rip:5},out:{crystal_oscillator:2}},
+
   hmf:{n:"Heavy Modular Frame",m:"manufacturer",t:30,in:{modular_frame:5,steel_pipe:15,eib:5,screw:100},out:{hmf:1}},
   computer:{n:"Computer",m:"manufacturer",t:24,in:{circuit_board:10,cable:9,plastic:18,screw:52},out:{computer:1}},
   modular_engine:{n:"Modular Engine",m:"manufacturer",t:60,in:{motor:2,rubber:15,smart_plating:2},out:{modular_engine:1}},
@@ -440,65 +460,120 @@ const RECIPES = {
   alt_pure_iron:{n:"Pure Iron Ingot",m:"refinery",t:12,in:{iron_ore:7,water:4},out:{iron_ingot:13},alt:1},
   alt_steamed_sheet:{n:"Steamed Copper Sheet",m:"refinery",t:8,in:{copper_ingot:3,water:3},out:{copper_sheet:3},alt:1},
   alt_recycled_plastic:{n:"Recycled Plastic",m:"refinery",t:12,in:{rubber:6,fuel:6},out:{plastic:12},alt:1},
-  alt_recycled_rubber:{n:"Recycled Rubber",m:"refinery",t:12,in:{plastic:6,fuel:6},out:{rubber:12},alt:1}
+  alt_recycled_rubber:{n:"Recycled Rubber",m:"refinery",t:12,in:{plastic:6,fuel:6},out:{rubber:12},alt:1},
+  alt_fine_concrete:{n:"Fine Concrete",m:"assembler",t:24,in:{silica:3,limestone:12},out:{concrete:10},alt:1}
 };
 
 /* ---------- RESOURCE NODES ---------- */
 const PURITY = {impure:.5, normal:1, pure:2};
+/* Deposits are no longer handed out by milestones - every one of them is found
+   by surveying a sector. `start` marks the four the drop pod landed on top of. */
 const NODES = [
-  ["iron_1","iron_ore","normal",null],["iron_2","iron_ore","normal",null],["iron_3","iron_ore","impure","m_logistics"],
-  ["iron_4","iron_ore","normal","m_base"],["iron_5","iron_ore","pure","m_clearing"],
-  ["iron_6","iron_ore","pure","m_steel"],["iron_7","iron_ore","normal","m_grid"],
-  ["copper_1","copper_ore","normal",null],["copper_2","copper_ore","normal","m_logistics"],
-  ["copper_3","copper_ore","impure","m_assembly"],["copper_4","copper_ore","pure","m_grid"],
-  ["lime_1","limestone","normal",null],["lime_2","limestone","normal","m_logistics"],
-  ["lime_3","limestone","pure","m_clearing"],["lime_4","limestone","normal","m_steel"],
-  ["coal_1","coal","normal","m_coal"],["coal_2","coal","normal","m_coal"],
-  ["coal_3","coal","pure","m_steel"],["coal_4","coal","normal","m_grid"],["coal_5","coal","normal","m_grid"],
-  ["cat_1","caterium_ore","normal","m_caterium"],["cat_2","caterium_ore","normal","m_caterium"],
-  ["cat_3","caterium_ore","pure","m_aero"],
-  ["oil_1","crude_oil","normal","m_oil"],["oil_2","crude_oil","normal","m_oil"],
-  ["oil_3","crude_oil","pure","m_fluids"]
-].map(function(a){return {id:a[0],res:a[1],pur:a[2],req:a[3]};});
+  ["iron_1","iron_ore","normal",1],["iron_2","iron_ore","normal",1],
+  ["copper_1","copper_ore","normal",1],["lime_1","limestone","normal",1],
+
+  ["iron_3","iron_ore","impure",0],["copper_2","copper_ore","normal",0],
+  ["lime_2","limestone","normal",0],["iron_4","iron_ore","normal",0],
+
+  ["coal_1","coal","normal",0],["coal_2","coal","normal",0],
+  ["iron_5","iron_ore","normal",0],["coal_3","coal","pure",0],
+
+  ["sulfur_1","sulfur","normal",0],["lime_3","limestone","normal",0],
+  ["copper_3","copper_ore","impure",0],["iron_6","iron_ore","pure",0],
+
+  ["quartz_1","raw_quartz","normal",0],["quartz_2","raw_quartz","normal",0],
+  ["sulfur_2","sulfur","normal",0],["lime_4","limestone","pure",0],
+
+  ["oil_1","crude_oil","normal",0],["oil_2","crude_oil","normal",0],
+  ["coal_4","coal","normal",0],["oil_3","crude_oil","pure",0],
+
+  ["cat_1","caterium_ore","normal",0],["cat_2","caterium_ore","normal",0],
+  ["iron_7","iron_ore","normal",0],["copper_4","copper_ore","pure",0],
+
+  ["quartz_3","raw_quartz","pure",0],["sulfur_3","sulfur","pure",0],
+  ["coal_5","coal","normal",0],["cat_3","caterium_ore","pure",0]
+].map(function(a){return {id:a[0],res:a[1],pur:a[2],start:a[3]};});
+
+/* ---------- SURVEY SECTORS ----------
+   effort is in station-seconds: one Survey Station clears `effort` seconds of it
+   per expedition, a Mk.2 counts as four. Each expedition reveals the next
+   deposit in the list. `deep` deposits need the Geological Survey milestone. */
+const SECTORS = [
+  {id:"rust",n:"Rust Canyon",tier:1,effort:90,cost:{concrete:15},
+   d:"Oxide bluffs a short walk above the landing site. Shallow seams, easy ground.",
+   find:["iron_3","copper_2","lime_2"],deep:["iron_4"],
+   cache:{iron_ore:120,limestone:80}},
+  {id:"ash",n:"Ashfall Basin",tier:1,effort:150,cost:{concrete:40,iron_plate:20},
+   d:"A cinder plain under permanent haze. The black seams running through it are coal.",
+   find:["coal_1","coal_2","iron_5"],deep:["coal_3"],
+   cache:{coal:150,iron_ore:100}},
+  {id:"verdant",n:"Verdant Shelf",tier:2,effort:240,cost:{concrete:60,rip:20},
+   d:"Terraced jungle over yellow crust. The air stings, which is the sulfur.",
+   find:["sulfur_1","lime_3","copper_3"],deep:["iron_6"],
+   cache:{sulfur:120,limestone:150}},
+  {id:"glass",n:"Glass Flats",tier:2,effort:300,cost:{concrete:80,cable:60,rotor:10},
+   d:"A salt pan studded with quartz spires that ring when you strike them.",
+   find:["quartz_1","quartz_2","sulfur_2"],deep:["lime_4"],
+   cache:{raw_quartz:120,sulfur:80}},
+  {id:"tar",n:"Tar Sinks",tier:3,effort:420,cost:{steel_beam:40,modular_frame:12},
+   d:"Slow black pools venting under their own pressure. Crude oil, and plenty of it.",
+   find:["oil_1","oil_2","coal_4"],deep:["oil_3"],
+   cache:{coal:300,raw_quartz:100}},
+  {id:"amber",n:"Amber Ridge",tier:4,effort:600,cost:{motor:20,steel_pipe:60},
+   d:"A gold-veined escarpment. The assay reads caterium, and the whole ridge is full of it.",
+   find:["cat_1","cat_2","iron_7"],deep:["copper_4"],
+   cache:{caterium_ore:200,iron_ore:300}},
+  {id:"spire",n:"The Spire",tier:6,effort:900,cost:{computer:10,hmf:10},
+   d:"A basalt needle ringed by pure deposits. The last unmapped ground on the plateau.",
+   find:["quartz_3","sulfur_3","coal_5"],deep:["cat_3"],
+   cache:{raw_quartz:400,sulfur:400,caterium_ore:300}}
+];
+/* finding a resource for the first time teaches you how to process it */
+const ON_FIND = {
+  sulfur:["compacted_coal","black_powder"],
+  raw_quartz:["silica","quartz_crystal"]
+};
+const BLAST_COST = 25;   /* black powder per expedition, halves the effort */
 
 /* ---------- MILESTONES ---------- */
 const MILESTONES = [
   {id:"m_base",tier:1,n:"Base Building",cost:{iron_rod:20,iron_plate:10},
-   un:["mach:storage_container","node:iron_4"]},
+   un:["mach:storage_container","mach:survey_station"]},
   {id:"m_logistics",tier:1,n:"Field Logistics",cost:{iron_plate:40,concrete:20},
-   un:["node:copper_2","node:lime_2","node:iron_3"]},
+   un:["rec:biomass_wood","rec:solid_biofuel"]},
 
   {id:"m_assembly",tier:2,n:"Part Assembly",cost:{iron_plate:50,iron_rod:50,wire:25},
-   un:["mach:assembler","rec:rip","rec:rotor","rec:copper_sheet","rec:smart_plating","node:copper_3"]},
-  {id:"m_clearing",tier:2,n:"Site Clearing",cost:{concrete:100,cable:50},
-   un:["node:iron_5","node:lime_3","rec:biomass_wood","rec:solid_biofuel"]},
+   un:["mach:assembler","rec:rip","rec:rotor","rec:copper_sheet","rec:smart_plating"]},
+  {id:"m_clearing",tier:2,n:"Site Clearing",cost:{concrete:80,cable:40},
+   un:["feat:blasting"]},
   {id:"m_sink",tier:2,n:"Resource Sink Program",cost:{concrete:50,wire:100,iron_plate:50},
    un:["mach:resource_sink","feat:catalog"]},
 
   {id:"m_coal",tier:3,n:"Coal Power",cost:{concrete:100,rip:50,cable:100},
-   un:["mach:coal_generator","mach:water_extractor","node:coal_1","node:coal_2"]},
+   un:["mach:coal_generator","mach:water_extractor"]},
   {id:"m_steel",tier:3,n:"Basic Steel Production",cost:{concrete:200,rip:100,rotor:50},
    un:["mach:foundry","rec:steel_ingot","rec:steel_beam","rec:steel_pipe","rec:modular_frame",
-       "rec:versatile_framework","node:iron_6","node:coal_3","node:lime_4"]},
+       "rec:versatile_framework"]},
 
   {id:"m_advsteel",tier:4,n:"Advanced Steel Production",cost:{modular_frame:100,steel_pipe:200,cable:100},
    un:["rec:eib","rec:stator","rec:motor","rec:automated_wiring","mach:miner_mk2","feat:overclock"]},
-  {id:"m_grid",tier:4,n:"Expanded Power Grid",cost:{steel_beam:100,eib:100,concrete:200},
-   un:["node:coal_4","node:coal_5","node:iron_7","node:copper_4"]},
+  {id:"m_grid",tier:4,n:"Geological Survey",cost:{steel_beam:100,eib:100,concrete:200},
+   un:["feat:deepscan"]},
 
   {id:"m_oil",tier:5,n:"Oil Processing",cost:{steel_pipe:200,copper_sheet:100,motor:50},
-   un:["mach:refinery","mach:oil_extractor","rec:plastic","rec:rubber","rec:fuel","node:oil_1","node:oil_2"]},
+   un:["mach:refinery","mach:oil_extractor","rec:plastic","rec:rubber","rec:fuel"]},
   {id:"m_industrial",tier:5,n:"Industrial Manufacturing",cost:{motor:100,steel_pipe:200,plastic:300,eib:100},
-   un:["mach:manufacturer","rec:circuit_board","rec:computer","rec:hmf"]},
+   un:["mach:manufacturer","rec:circuit_board","rec:computer","rec:hmf","rec:crystal_oscillator",
+       "mach:survey_station_2"]},
 
   {id:"m_fluids",tier:6,n:"Alternative Fluid Transport",cost:{motor:50,plastic:100,rubber:100},
    un:["rec:residual_fuel","rec:residual_plastic","rec:residual_rubber","rec:petroleum_coke",
-       "mach:fuel_generator","node:oil_3"]},
+       "mach:fuel_generator"]},
   {id:"m_caterium",tier:6,n:"Caterium Electronics",cost:{computer:20,plastic:200,rubber:200,cable:300},
-   un:["rec:caterium_ingot","rec:quickwire","rec:ai_limiter","node:cat_1","node:cat_2"]},
+   un:["rec:caterium_ingot","rec:quickwire","rec:ai_limiter"]},
 
   {id:"m_aero",tier:7,n:"Aeronautical Engineering",cost:{hmf:50,computer:50,ai_limiter:100,rubber:500},
-   un:["rec:modular_engine","rec:adaptive_control_unit","mach:miner_mk3","node:cat_3"]}
+   un:["rec:modular_engine","rec:adaptive_control_unit","mach:miner_mk3"]}
 ];
 
 /* ---------- ASCENT ELEVATOR PHASES ---------- */
@@ -522,6 +597,7 @@ const CATALOG = [
   {id:"alt_steamed_sheet",n:"Steamed Copper Sheet",d:"22.5 sheet/min per refinery, water-assisted."},
   {id:"alt_recycled_plastic",n:"Recycled Plastic",d:"Closes the oil loop. Needs rubber and fuel."},
   {id:"alt_recycled_rubber",n:"Recycled Rubber",d:"The other half of the loop. Pairs with Recycled Plastic."},
+  {id:"alt_fine_concrete",n:"Fine Concrete",d:"Silica-bound concrete: 30 limestone and 7.5 silica to 25 concrete."},
   {id:"buy_storage",n:"Storage Expansion",d:"+250 buffer on every solid item, +500 on every fluid.",repeat:10}
 ];
 const OC_EXP = 1.321928; /* power scales with clock^log2(2.5) */
@@ -534,6 +610,8 @@ const OC_EXP = 1.321928; /* power scales with clock^log2(2.5) */
    ============================================================ */
 const NODE_BY_ID = {};
 NODES.forEach(function(n){ NODE_BY_ID[n.id]=n; });
+const SECTOR_BY_ID = {};
+SECTORS.forEach(function(x){ SECTOR_BY_ID[x.id]=x; });
 
 const START_MACH = ["smelter","constructor","miner_mk1","biomass_burner"];
 const START_REC  = ["iron_ingot","copper_ingot","iron_plate","iron_rod","screw","wire","cable",
@@ -547,9 +625,10 @@ const OFFLINE_CAP = 4*3600;   /* four hours of catch-up */
 
 function freshState(){
   const S = {
-    v:1, t:Date.now(),
+    v:2, t:Date.now(),
     inv:{leaves:250, iron_ore:30},
     nodes:{ iron_1:{m:"miner_mk1",clk:1} },
+    found:{}, scan:{}, survey:null, seen:{},
     groups:{ iron_ingot:{c:1,clk:1,on:1}, iron_rod:{c:1,clk:1,on:1} },
     gens:{ biomass_burner:{c:1,f:"leaves"} },
     water:0,
@@ -562,6 +641,7 @@ function freshState(){
   };
   START_MACH.forEach(function(m){ S.un.mach[m]=1; });
   START_REC.forEach(function(r){ S.un.rec[r]=1; });
+  NODES.forEach(function(n){ if(n.start){ S.found[n.id]=1; S.seen[n.res]=1; } });
   return S;
 }
 let S = freshState();
@@ -577,7 +657,55 @@ function have(id){ return S.inv[id]||0; }
 function machineOf(rid){ return MACH[RECIPES[rid].m]; }
 function recUnlocked(rid){ return !!S.un.rec[rid]; }
 function machUnlocked(m){ return !!S.un.mach[m]; }
-function nodeUnlocked(n){ return n.req===null || !!S.done[n.req]; }
+function nodeUnlocked(n){ return !!S.found[n.id]; }
+function sectorOpen(sec){ return maxTier() >= sec.tier; }
+function sectorList(sec){ return sec.find.concat(S.un.feat.deepscan ? sec.deep : []); }
+function sectorTotal(sec){ return sec.find.length + (S.un.feat.deepscan ? sec.deep.length : 0); }
+function sectorFound(sec){
+  let n = 0;
+  sectorList(sec).forEach(function(id){ if(S.found[id]) n++; });
+  return n;
+}
+function nextDeposit(sec){
+  const list = sectorList(sec);
+  for(let i=0; i<list.length; i++) if(!S.found[list[i]]) return list[i];
+  return null;
+}
+function scanRate(){
+  let r = 0;
+  for(const k in S.scan) r += (MACH[k].scan||0) * (S.scan[k]||0);
+  return r;
+}
+/* An expedition returns: the deposit goes on the map, the cache goes in the depot,
+   and a resource you have never seen before teaches you how to process it. */
+function completeSurvey(){
+  const sv = S.survey; if(!sv) return;
+  const sec = SECTOR_BY_ID[sv.sec]; if(!sec){ S.survey = null; return; }
+  const id = nextDeposit(sec);
+  const found = [];
+  if(id){
+    S.found[id] = 1;
+    const res = NODE_BY_ID[id].res;
+    found.push(id);
+    if(!S.seen[res]){
+      S.seen[res] = 1;
+      (ON_FIND[res]||[]).forEach(function(r){ S.un.rec[r] = 1; });
+      sv.newRes = res;
+    }
+  }
+  for(const k in sec.cache) S.inv[k] = have(k) + sec.cache[k];
+  sv.doneWith = id; sv.doneSec = sec.id;
+  RT.lastFind = {sec:sec.id, node:id, res:sv.newRes||null, cache:sec.cache};
+  /* keep going if the sector still has ground left and the run can be paid for */
+  if(sv.repeat && nextDeposit(sec) && canAfford(sec.cost)){
+    payCost(sec.cost);
+    const blast = sv.blast && have("black_powder") >= BLAST_COST;
+    if(blast) S.inv.black_powder = have("black_powder") - BLAST_COST;
+    S.survey = {sec:sec.id, prog:0, boost: blast?2:1, blast:sv.blast, repeat:1};
+  } else {
+    S.survey = null;
+  }
+}
 /* phases open the next tier band: start 1-2, p1 -> 3-4, p2 -> 5-6, p3 -> 7 */
 function maxTier(){ return [2,4,6,7,8][Math.min(S.phase,4)]; }
 
@@ -588,8 +716,10 @@ function ratePerMin(rid, item, side){
 }
 function canAfford(cost){ for(const k in cost){ if(have(k) < cost[k]-1e-9) return false; } return true; }
 function payCost(cost){ for(const k in cost){ S.inv[k] = have(k) - cost[k]; } }
+/* Refunds may overfill a buffer. Clamping here would quietly destroy materials
+   when you dismantle into a full stock; overfilled stock just drains normally. */
 function refund(cost, mult){
-  for(const k in cost){ S.inv[k] = Math.min(capOf(k), have(k) + cost[k]*(mult===undefined?1:mult)); }
+  for(const k in cost){ S.inv[k] = have(k) + cost[k]*(mult===undefined?1:mult); }
 }
 
 /* ============================================================
@@ -631,6 +761,18 @@ function step(dt){
     for(const k in R.out) o[k] = R.out[k] * 60 / R.t * mult;
     units.push({key:rid, mw:mw, i:i, o:o});
   }
+  /* --- survey stations, drawing only while an expedition is out --- */
+  let scanPow = 0, rate = 0;
+  if(S.survey && S.survey.sec){
+    for(const k in S.scan){
+      const c = S.scan[k]||0; if(!c) continue;
+      scanPow += MACH[k].mw * c;
+      rate += (MACH[k].scan||0) * c;
+    }
+    demandMW += scanPow;
+  }
+  RT.scanRate = rate;
+
   /* --- resource sinks --- */
   if(S.sink.c>0 && S.sink.item){
     const M = MACH.resource_sink;
@@ -720,6 +862,15 @@ function step(dt){
   }
   for(const k in burned) fin[k] = (fin[k]||0) + burned[k];
   RT.flowIn = fin; RT.flowOut = fout;
+
+  /* survey progress, throttled by power like everything else */
+  if(S.survey && S.survey.sec && rate > 0){
+    const sec = SECTOR_BY_ID[S.survey.sec];
+    if(sec){
+      S.survey.prog += rate * (S.survey.boost||1) * sat * dt;
+      if(S.survey.prog >= sec.effort) completeSurvey();
+    } else S.survey = null;
+  }
   S.stats.playT += dt;
 }
 
@@ -746,7 +897,8 @@ function load(){
   if(!raw) return null;
   try{
     const o = JSON.parse(raw);
-    if(!o || o.v !== 1) return null;
+    if(!o || (o.v !== 1 && o.v !== 2)) return null;
+    if(o.v === 1) migrate1to2(o);
     const base = freshState();
     for(const k in base) if(!(k in o)) o[k] = base[k];
     for(const k in base.un) if(!o.un[k]) o.un[k] = base.un[k];
@@ -754,20 +906,48 @@ function load(){
     return o;
   }catch(e){ return null; }
 }
+/* v1 handed deposits out through milestones. Carry those over so a save made
+   before surveying existed keeps every deposit it had already earned. */
+const LEGACY_NODE_REQ = {
+  iron_3:"m_logistics", iron_4:"m_base", iron_5:"m_clearing", iron_6:"m_steel", iron_7:"m_grid",
+  copper_2:"m_logistics", copper_3:"m_assembly", copper_4:"m_grid",
+  lime_2:"m_logistics", lime_3:"m_clearing", lime_4:"m_steel",
+  coal_1:"m_coal", coal_2:"m_coal", coal_3:"m_steel", coal_4:"m_grid", coal_5:"m_grid",
+  cat_1:"m_caterium", cat_2:"m_caterium", cat_3:"m_aero",
+  oil_1:"m_oil", oil_2:"m_oil", oil_3:"m_fluids"
+};
+function migrate1to2(o){
+  o.v = 2;
+  o.found = o.found || {}; o.seen = o.seen || {}; o.scan = o.scan || {}; o.survey = null;
+  NODES.forEach(function(n){ if(n.start) o.found[n.id] = 1; });
+  for(const id in LEGACY_NODE_REQ){
+    if(o.done && o.done[LEGACY_NODE_REQ[id]] && NODE_BY_ID[id]) o.found[id] = 1;
+  }
+  /* anything already mined stays mined, even if its milestone changed hands */
+  for(const id in (o.nodes||{})) if(NODE_BY_ID[id]) o.found[id] = 1;
+  for(const id in o.found){ const n = NODE_BY_ID[id]; if(n) o.seen[n.res] = 1; }
+  o.un = o.un || {}; o.un.feat = o.un.feat || {};
+  if(o.done && o.done.m_base) o.un.mach = o.un.mach || {}, o.un.mach.survey_station = 1;
+  if(o.done && o.done.m_grid) o.un.feat.deepscan = 1;
+  if(o.done && o.done.m_clearing) o.un.feat.blasting = 1;
+}
 function applyOffline(){
   const gap = Math.min(OFFLINE_CAP, Math.max(0, (Date.now() - (S.t||Date.now()))/1000));
   if(gap < 45) { S.t = Date.now(); return null; }
   const before = {}; ITEM_IDS.forEach(function(i){ before[i] = have(i); });
   const p0 = S.pts;
+  const found0 = Object.keys(S.found).length;
   advance(gap);
+  RT.lastFind = null;                    /* the away sheet reports these, not a toast */
   S.t = Date.now();
+  const newFound = Object.keys(S.found).length - found0;
   const gained = [];
   ITEM_IDS.forEach(function(i){
     const d = have(i) - before[i];
     if(d > 0.5) gained.push({id:i, d:d});
   });
   gained.sort(function(a,b){ return b.d*ITEMS[b.id].p - a.d*ITEMS[a.id].p; });
-  return {sec:gap, gained:gained.slice(0,12), pts:S.pts - p0};
+  return {sec:gap, gained:gained.slice(0,12), pts:S.pts - p0, found:newFound};
 }
 </script>
 
@@ -951,13 +1131,17 @@ function statTile(label, val){
   return '<div class="slot" style="display:block"><div class="lbl">'+label+'</div>'+
          '<div class="qt" style="margin-top:2px">'+val+'</div></div>';
 }
+const FEAT_NAME = {
+  catalog:"Requisition Catalog", overclock:"Overclocking",
+  blasting:"Blasting Charges", deepscan:"Deep Scan"
+};
 function unlockTags(list){
   return list.map(function(u){
     const p = u.split(":"), kind = p[0], id = p[1];
     if(kind === "mach") return '<span class="tag g">'+esc(MACH[id].n)+'</span>';
     if(kind === "rec")  return '<span class="tag">'+esc(RECIPES[id].n)+'</span>';
     if(kind === "node") return '<span class="tag">'+esc(ITEMS[NODE_BY_ID[id].res].n)+' node</span>';
-    if(kind === "feat") return '<span class="tag g">'+(id==="catalog"?"Requisition Catalog":"Overclocking")+'</span>';
+    if(kind === "feat") return '<span class="tag g">'+esc(FEAT_NAME[id]||id)+'</span>';
     return "";
   }).join("");
 }
@@ -972,7 +1156,8 @@ function countMachines(){
 /* ============================================================
    TAB: MINE
    ============================================================ */
-const TAP = {iron_ore:5, copper_ore:5, limestone:5, coal:5, caterium_ore:5, leaves:25, wood:10};
+const TAP = {iron_ore:5, copper_ore:5, limestone:5, coal:5, caterium_ore:5,
+             sulfur:5, raw_quartz:5, leaves:25, wood:10};
 /* Anything you can mine by hand, so a grid that runs dry can always be restarted. */
 function tappable(){
   const seen = {}, list = [];
@@ -1220,6 +1405,123 @@ function openPicker(m){
 }
 
 /* ============================================================
+   TAB: SCAN
+   ============================================================ */
+const SCAN_ORDER = ["survey_station","survey_station_2"];
+function tabScan(){
+  let s = "";
+  const rate = scanRate();
+
+  if(!machUnlocked("survey_station")){
+    return '<div class="empty">Surveying opens with the <b>Base Building</b> milestone. '+
+           'Until then you are working the four deposits the drop pod landed on.</div>';
+  }
+
+  /* stations */
+  s += '<div class="sec"><div class="sec-head"><h2>Survey Stations</h2><div class="rule"></div>'+
+       '<span class="note mono">'+rt(rate)+' scan/s</span></div>';
+  SCAN_ORDER.forEach(function(k){
+    if(!machUnlocked(k)) return;
+    const M = MACH[k], c = S.scan[k]||0;
+    s += '<div class="card'+(c?" lit":"")+'"><div class="row"><div class="grow">'+
+      '<div class="ttl" style="font-size:13.5px">'+esc(M.n)+'</div>'+
+      '<div class="sub">'+M.scan+' scan/s each &middot; '+mw(M.mw)+' each, drawn only while surveying</div></div>'+
+      stepper("scan:"+k, c)+'</div>'+costList(M.cost)+'</div>';
+  });
+  s += '</div>';
+
+  /* expedition in flight */
+  const sv = S.survey;
+  s += '<div class="sec"><div class="sec-head"><h2>Expedition</h2><div class="rule"></div></div>';
+  if(sv && SECTOR_BY_ID[sv.sec]){
+    const sec = SECTOR_BY_ID[sv.sec];
+    const eff = sec.effort;
+    const per = rate * (sv.boost||1);
+    const pc = Math.min(100, sv.prog/eff*100);
+    const eta = per > 0 ? (eff - sv.prog)/per : Infinity;
+    const target = nextDeposit(sec);
+    s += '<div class="card lit"><div class="row"><span class="ttl grow">'+esc(sec.n)+'</span>'+
+      (sv.boost > 1 ? '<span class="stat st-star">CHARGES SET</span>' :
+       per > 0 ? '<span class="stat st-run">SURVEYING</span>' : '<span class="stat st-pow">NO STATION</span>')+'</div>'+
+      '<div class="sub" style="margin-top:3px">'+(target ?
+        "Tracing a "+esc(ITEMS[NODE_BY_ID[target].res].n.toLowerCase())+" signature" :
+        "Nothing left to map here")+'</div>'+
+      '<div class="prog" style="height:10px;margin-top:9px"><i id="svBar" style="width:'+pc+'%"></i></div>'+
+      '<div class="row" style="margin-top:6px"><span class="sub grow mono" id="svEta">'+
+        (per > 0 ? dur(eta)+" remaining" : "idle - build a survey station")+'</span>'+
+      '<button class="btn sm ghost" data-act="svrepeat">Repeat '+(sv.repeat?"on":"off")+'</button>'+
+      '<button class="btn sm ghost" data-act="svstop">Recall</button></div></div>';
+    bind("svBar", function(e){
+      const v = S.survey; if(!v) return;
+      e.style.width = Math.min(100, v.prog/SECTOR_BY_ID[v.sec].effort*100)+"%";
+    });
+    bind("svEta", function(e){
+      const v = S.survey; if(!v) return;
+      const p = scanRate()*(v.boost||1);
+      e.textContent = p > 0 ? dur((SECTOR_BY_ID[v.sec].effort - v.prog)/p)+" remaining"
+                            : "idle - build a survey station";
+    });
+  } else {
+    s += '<div class="empty">No expedition out. Pick a sector below and dispatch a survey.</div>';
+  }
+  s += '</div>';
+
+  /* sectors */
+  s += '<div class="sec"><div class="sec-head"><h2>Sectors</h2><div class="rule"></div>'+
+       '<span class="note">'+Object.keys(S.found).length+' deposits mapped</span></div>';
+  if(!S.un.feat.deepscan)
+    s += '<div class="card tight"><div class="sub">Deposits marked <span class="tag">deep</span> sit below '+
+         'what a surface sweep can read. The <b>Geological Survey</b> milestone brings them into range.</div></div>';
+  SECTORS.forEach(function(sec){
+    const open = sectorOpen(sec);
+    const total = sectorTotal(sec), got = sectorFound(sec);
+    const next = nextDeposit(sec);
+    const busy = !!(S.survey && S.survey.sec === sec.id);
+    const hidden = sec.deep.length && !S.un.feat.deepscan;
+    const chips = sec.find.concat(sec.deep).filter(function(id){ return S.found[id]; })
+      .map(function(id){
+        const n = NODE_BY_ID[id];
+        return '<span class="chip">'+ico(n.res,1)+'<span class="pur '+n.pur+'" style="border:none;padding:0">'+n.pur+'</span></span>';
+      }).join("");
+    s += '<div class="card'+(busy?" lit":"")+'"><div class="row" style="align-items:flex-start">'+
+      '<div class="grow"><div class="ttl">'+esc(sec.n)+'</div>'+
+      '<div class="sub">'+esc(sec.d)+'</div></div>'+
+      (open ? '<span class="stat '+(next ? "st-off" : hidden ? "st-full" : "st-run")+'">'+
+                (next ? got+"/"+total : hidden ? "SURFACE ONLY" : "MAPPED")+'</span>'
+            : '<span class="pill">Tier '+sec.tier+'</span>')+'</div>';
+    if(chips || hidden) s += '<div class="flow">'+chips+
+      (hidden ? '<span class="tag">+'+sec.deep.length+' deep</span>' : '')+'</div>';
+    if(open && next){
+      const per = rate;
+      s += '<div class="sub" style="margin-top:7px">Effort <span class="mono">'+sec.effort+
+        '</span> scan &middot; '+(per>0 ? '<span class="mono">'+dur(sec.effort/per)+'</span> at your current rate'
+                                       : 'no survey station built')+'</div>'+
+        costList(sec.cost);
+      const can = canAfford(sec.cost) && !S.survey && per > 0;
+      s += '<div class="row" style="margin-top:9px;gap:7px">'+
+        '<button class="btn grow '+(can?"pri":"")+'" data-act="dispatch" data-id="'+sec.id+'"'+
+        (can?"":" disabled")+'>'+(busy ? "Surveying" :
+          S.survey ? "Expedition already out" :
+          per <= 0 ? "Build a survey station" :
+          !canAfford(sec.cost) ? "Not enough supplies" : "Dispatch survey")+'</button>';
+      if(S.un.feat.blasting){
+        const ok = have("black_powder") >= BLAST_COST;
+        s += '<button class="btn sm'+(S.blast?" pri":"")+'" data-act="blast"'+(ok?"":" disabled")+
+          ' aria-label="Arm blasting charges" title="Spend '+BLAST_COST+' black powder to halve the effort">'+
+          ico("black_powder",1)+BLAST_COST+'</button>';
+      }
+      s += '</div>';
+      if(S.un.feat.blasting && S.blast)
+        s += '<div class="sub" style="margin-top:6px;color:var(--warn)">Charges armed: the next dispatch spends '+
+             BLAST_COST+' black powder and halves the effort.</div>';
+    }
+    s += '</div>';
+  });
+  s += '</div>';
+  return s;
+}
+
+/* ============================================================
    TAB: POWER
    ============================================================ */
 const GEN_ORDER = ["biomass_burner","coal_generator","fuel_generator"];
@@ -1259,7 +1561,6 @@ function tabPower(){
     const short = RT.genShort[g];
     let opts = "";
     M.fuels.forEach(function(f){
-      if(!S.un.rec[f] && !have(f) && f !== M.fuels[0] && !(f==="coal"||f==="fuel")) { /* still list it */ }
       opts += '<option value="'+f+'"'+(f===G.f?" selected":"")+'>'+esc(ITEMS[f].n)+' &middot; '+
         FUEL_MJ[f]+' MJ</option>';
     });
@@ -1425,8 +1726,11 @@ function setGroupCount(rid, n){
 function handCraft(rid){
   const R = RECIPES[rid];
   for(const k in R.in) if(have(k) < R.in[k]) { toast("Missing "+ITEMS[k].n, 1); return; }
+  for(const k in R.out) if(have(k) + R.out[k] > capOf(k) + 1e-9){
+    toast(ITEMS[k].n+" buffer is full", 1); return;
+  }
   for(const k in R.in) S.inv[k] = have(k) - R.in[k];
-  for(const k in R.out) S.inv[k] = Math.min(capOf(k), have(k) + R.out[k]);
+  for(const k in R.out) S.inv[k] = have(k) + R.out[k];
 }
 function depositInto(cost, store){
   let moved = 0, done = true;
@@ -1466,7 +1770,9 @@ function doPhase(){
   else toast("Nothing in stock to deliver", 1);
 }
 
-view.addEventListener("click", function(e){
+/* Delegated on document, not on `view`: sheets are appended to document.body,
+   so a handler bound to the view never sees the recipe picker's buttons. */
+document.addEventListener("click", function(e){
   const t = e.target.closest("[data-act]");
   if(!t || t.disabled) return;
   const act = t.getAttribute("data-act");
@@ -1484,6 +1790,11 @@ view.addEventListener("click", function(e){
     else if(base.indexOf("g:") === 0){
       const rid = base.slice(2);
       adjustBuild(RECIPES[rid].m, d, function(){return groupCount(rid);}, function(v){setGroupCount(rid,v);});
+    }
+    else if(base.indexOf("scan:") === 0){
+      const k = base.slice(5);
+      if(S.scan[k] === undefined) S.scan[k] = 0;
+      adjustBuild(k, d, function(){return S.scan[k];}, function(v){S.scan[k]=v;});
     }
     else if(base.indexOf("gen:") === 0){
       const g = base.slice(4);
@@ -1545,6 +1856,34 @@ view.addEventListener("click", function(e){
       toast(item.n+" acquired");
       render(); return;
     }
+    case "dispatch": {
+      const sec = SECTOR_BY_ID[id];
+      if(!sec || S.survey) return;
+      if(!sectorOpen(sec)){ toast("That sector is out of range", 1); return; }
+      if(!nextDeposit(sec)){ toast("Nothing left to map there", 1); return; }
+      if(scanRate() <= 0){ toast("Build a survey station first", 1); return; }
+      if(!canAfford(sec.cost)){ toast("Not enough supplies for the expedition", 1); return; }
+      payCost(sec.cost);
+      let boost = 1;
+      if(S.blast && S.un.feat.blasting && have("black_powder") >= BLAST_COST){
+        S.inv.black_powder = have("black_powder") - BLAST_COST;
+        boost = 2;
+      }
+      S.survey = {sec:sec.id, prog:0, boost:boost, blast:S.blast?1:0, repeat:1};
+      S.blast = 0;
+      toast("Expedition dispatched to "+sec.n);
+      render(); return;
+    }
+    case "svstop": {
+      if(!S.survey) return;
+      const sec = SECTOR_BY_ID[S.survey.sec];
+      if(sec) refund(sec.cost);          /* recall returns the supplies, not the progress */
+      S.survey = null;
+      toast("Expedition recalled, supplies returned");
+      render(); return;
+    }
+    case "svrepeat": if(S.survey) S.survey.repeat = S.survey.repeat ? 0 : 1; render(); return;
+    case "blast": S.blast = S.blast ? 0 : 1; render(); return;
     case "backup": openBackup(); return;
     case "reset": openReset(); return;
   }
@@ -1607,7 +1946,8 @@ function openBackup(){
         if(!v) return;
         try{
           const o = JSON.parse(decodeURIComponent(atob(v)));
-          if(!o || o.v !== 1) throw 0;
+          if(!o || (o.v !== 1 && o.v !== 2)) throw 0;
+          if(o.v === 1) migrate1to2(o);
           S = o; save(); closeSheet(); render();
           toast("Factory restored");
         }catch(err){ toast("That code could not be read", 1); }
@@ -1643,7 +1983,11 @@ function openHelp(){
     'byproduct back into balance.</p>'+
     '<p><b>Byproducts clog.</b> Refining plastic makes heavy oil residue. If nothing consumes it the buffer '+
     'fills and the refinery stops. Residual Fuel and Petroleum Coke are the way out.</p>'+
-    '<p><b>The loop.</b> Complete Hub milestones to unlock buildings, recipes and nodes. Deliver elevator '+
+    '<p><b>Nothing is on the map until you find it.</b> You start on four deposits. Every other one is '+
+    'discovered by dispatching a survey from the Scan tab: stations clear a sector\'s effort, each expedition '+
+    'returns one deposit and a supply cache, and a resource you have never seen before also teaches you how '+
+    'to process it. Sulfur gives compacted coal, which is worth more than twice a lump of coal in a generator.</p>'+
+    '<p><b>The loop.</b> Complete Hub milestones to unlock buildings, recipes and survey range. Deliver elevator '+
     'phases to open the next tier band. Sink surplus parts for points, redeem points for vouchers, and spend '+
     'vouchers on alternate recipes with far better ratios.</p>');
 }
@@ -1652,7 +1996,7 @@ document.getElementById("helpBtn").addEventListener("click", openHelp);
 /* ============================================================
    RENDER LOOP
    ============================================================ */
-const TABS = {hub:tabHub, mine:tabMine, make:tabMake, power:tabPower, depot:tabDepot};
+const TABS = {hub:tabHub, mine:tabMine, make:tabMake, scan:tabScan, power:tabPower, depot:tabDepot};
 function syncTabs(){
   document.querySelectorAll(".tab").forEach(function(b){
     b.setAttribute("aria-selected", b.getAttribute("data-tab") === TAB ? "true" : "false");
@@ -1661,6 +2005,7 @@ function syncTabs(){
 document.querySelectorAll(".tab").forEach(function(b){
   b.addEventListener("click", function(){
     TAB = b.getAttribute("data-tab");
+    const d = b.querySelector(".dot"); if(d) d.remove();
     syncTabs(); main.scrollTop = 0; render(true);
   });
 });
@@ -1680,6 +2025,25 @@ function render(top){
 function tickUI(){
   for(let i=0; i<LIVE.length; i++) LIVE[i].fn(LIVE[i].el);
   updateHud();
+  /* Clear the find BEFORE announcing it. announceFind can ask for a re-render,
+     and render() calls tickUI() again - leaving it set re-enters forever. */
+  if(RT.lastFind){ const f = RT.lastFind; RT.lastFind = null; announceFind(f); }
+}
+/* An expedition can land at any moment, including on another tab, so say so.
+   This only ever sets a flag: the render happens back in the tick, never nested. */
+function announceFind(f){
+  const sec = SECTOR_BY_ID[f.sec];
+  if(f.node){
+    const n = NODE_BY_ID[f.node];
+    toast((f.res ? "New resource: " : "Deposit found: ")+ITEMS[n.res].n+" ("+n.pur+") in "+sec.n);
+  } else toast("Survey of "+sec.n+" returned a supply cache");
+  if(TAB !== "scan"){
+    const b = document.querySelector('.tab[data-tab="scan"]');
+    if(b && !b.querySelector(".dot")){
+      const d = document.createElement("i"); d.className = "dot"; b.appendChild(d);
+    }
+  }
+  if(TAB === "scan" || TAB === "mine") RT.needRender = 1;
 }
 const hudTier = document.getElementById("hudTier");
 const hudPow  = document.getElementById("hudPow");
@@ -1715,7 +2079,8 @@ setInterval(function(){
   advance(dt);
   tickUI();
   sinceRender += dt;
-  if(sinceRender > 4 && !dragging && !document.querySelector(".scrim") && Date.now()-lastScroll > 1200){
+  if(RT.needRender){ RT.needRender = 0; sinceRender = 0; render(); }
+  else if(sinceRender > 4 && !dragging && !document.querySelector(".scrim") && Date.now()-lastScroll > 1200){
     sinceRender = 0; render();
   }
 }, 200);
@@ -1745,6 +2110,8 @@ function start(hot){
           '<div class="qt">+'+qty(g.d)+'</div></div></div>';
       }).join("")+'</div>'+
       (away.pts > 1 ? '<p>Resource sink banked <b>'+fmt(away.pts)+'</b> points.</p>' : '')+
+      (away.found > 0 ? '<p>Surveys returned <b>'+away.found+'</b> new deposit'+(away.found>1?"s":"")+
+        '. They are on the Scan tab.</p>' : '')+
       '<p style="color:var(--ink-3);font-size:12px">Offline production runs for up to four hours and stops '+
       'when a generator runs out of fuel.</p>');
   }
