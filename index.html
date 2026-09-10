@@ -1,0 +1,1761 @@
+<title>Pocket Foundry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+:root{
+  --void:#0d1014;
+  --steel:#141920;
+  --steel-2:#1b222b;
+  --steel-3:#232c37;
+  --line:#2b3644;
+  --line-hot:#3f4d5f;
+  --ink:#e8edf4;
+  --ink-2:#95a3b5;
+  --ink-3:#66748a;
+  --amber:#ff9a3c;
+  --amber-deep:#b86a1e;
+  --ember:#ff5d3b;
+  --volt:#5cc8f5;
+  --grow:#78d16b;
+  --warn:#ffc94d;
+  --hazard:repeating-linear-gradient(135deg, rgba(255,154,60,.10) 0 7px, rgba(255,154,60,0) 7px 14px);
+  --chamf:polygon(9px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 9px);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--void);
+  color:var(--ink);
+  font-family:"Barlow","Helvetica Neue",Arial,sans-serif;
+  font-size:15px;
+  line-height:1.4;
+  height:100dvh;
+  overflow:hidden;
+  display:grid;
+  grid-template-rows:auto minmax(0,1fr) auto;
+  -webkit-font-smoothing:antialiased;
+  -webkit-tap-highlight-color:transparent;
+}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;padding:0}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.lbl{font-family:"Chakra Petch",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.10em;font-size:11px;color:var(--ink-3)}
+
+/* ---------- HUD ---------- */
+header{
+  border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg,var(--steel-2),var(--steel));
+  position:relative;
+}
+header::after{content:"";position:absolute;inset:0;background:var(--hazard);pointer-events:none;opacity:.5}
+.hud{max-width:600px;margin:0 auto;padding:8px 14px 9px;position:relative;z-index:1}
+.hud-top{display:flex;align-items:center;gap:9px}
+.mark{
+  width:26px;height:26px;flex:none;background:var(--amber);
+  clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);
+  display:grid;place-items:center;color:#12161b;
+  font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:14px;
+}
+.wordmark{font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:14px;letter-spacing:.14em;text-transform:uppercase;line-height:1}
+.wordmark small{display:block;font-size:9px;letter-spacing:.2em;color:var(--ink-3);font-weight:500;margin-top:2px}
+.hud-right{margin-left:auto;display:flex;gap:6px;align-items:center}
+.pill{
+  font-family:"Chakra Petch",sans-serif;font-weight:600;font-size:10.5px;letter-spacing:.09em;
+  text-transform:uppercase;padding:3px 8px;border:1px solid var(--line-hot);color:var(--ink-2);
+  clip-path:polygon(5px 0,100% 0,100% calc(100% - 5px),calc(100% - 5px) 100%,0 100%,0 5px);
+  background:var(--steel-3);white-space:nowrap;
+}
+.pill b{color:var(--amber);font-weight:700}
+#helpBtn{width:26px;height:26px;border:1px solid var(--line-hot);background:var(--steel-3);color:var(--ink-2);
+  font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:13px;line-height:1;display:grid;place-items:center}
+
+/* power meter */
+.meter{margin-top:8px}
+.meter-row{display:flex;align-items:baseline;gap:8px;font-size:11px}
+.meter-row .mono{font-size:12px}
+.bar{
+  position:relative;height:9px;margin-top:4px;background:#0a0d11;
+  border:1px solid var(--line);overflow:hidden;
+}
+.bar-fill{position:absolute;inset:0 auto 0 0;width:0%;background:var(--volt);transition:width .22s linear}
+.bar-fill.stripe{
+  background-image:repeating-linear-gradient(115deg,rgba(0,0,0,.22) 0 6px,rgba(0,0,0,0) 6px 12px);
+  background-size:200% 100%;animation:crawl 1.1s linear infinite;
+}
+@keyframes crawl{from{background-position:0 0}to{background-position:-24px 0}}
+.bar-cap{position:absolute;top:0;bottom:0;width:2px;background:var(--ink-2);opacity:.7}
+body.brownout .bar-fill{background:var(--ember)}
+body.brownout header::after{background:repeating-linear-gradient(135deg,rgba(255,93,59,.16) 0 7px,rgba(255,93,59,0) 7px 14px);animation:flash 1.4s ease-in-out infinite}
+@keyframes flash{0%,100%{opacity:.35}50%{opacity:.85}}
+
+/* ---------- main ---------- */
+main{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.wrap{max-width:600px;margin:0 auto;padding:14px;padding-block:14px 26px;display:flex;flex-direction:column;gap:14px}
+
+.sec{display:flex;flex-direction:column;gap:8px}
+.sec-head{display:flex;align-items:center;gap:8px}
+.sec-head h2{font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:13px;letter-spacing:.13em;
+  text-transform:uppercase;margin:0;color:var(--ink)}
+.sec-head .rule{flex:1;height:1px;background:var(--line)}
+.sec-head .note{font-size:11px;color:var(--ink-3)}
+
+.card{background:var(--steel);border:1px solid var(--line);clip-path:var(--chamf);padding:11px 12px}
+.card.tight{padding:9px 11px}
+.card.lit{border-color:var(--line-hot);background:var(--steel-2)}
+
+.row{display:flex;align-items:center;gap:9px}
+.grow{flex:1;min-width:0}
+.ttl{font-family:"Chakra Petch",sans-serif;font-weight:600;font-size:14.5px;letter-spacing:.02em;line-height:1.15}
+.sub{font-size:11.5px;color:var(--ink-3);line-height:1.3}
+
+/* item icon */
+.ico{width:20px;height:20px;flex:none;display:block;background:var(--c,#888)}
+.ico.raw{border-radius:50%}
+.ico.ingot{border-radius:3px;height:13px;margin-block:3px}
+.ico.part{clip-path:polygon(5px 0,100% 0,100% calc(100% - 5px),calc(100% - 5px) 100%,0 100%,0 5px)}
+.ico.fluid{clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+.ico.proj{clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
+.ico.sm{width:14px;height:14px}
+.ico.sm.ingot{height:9px;margin-block:2.5px}
+
+.chip{display:inline-flex;align-items:center;gap:5px;background:var(--steel-3);border:1px solid var(--line);
+  padding:3px 7px 3px 4px;font-size:12px;white-space:nowrap}
+.chip .mono{font-size:12px}
+.chip.bad{border-color:rgba(255,93,59,.55)}
+.chip.bad .mono{color:var(--ember)}
+
+/* buttons */
+.btn{
+  font-family:"Chakra Petch",sans-serif;font-weight:600;font-size:12px;letter-spacing:.09em;text-transform:uppercase;
+  padding:8px 12px;background:var(--steel-3);border:1px solid var(--line-hot);color:var(--ink);
+  clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px);
+  min-height:38px;display:inline-flex;align-items:center;justify-content:center;gap:6px;
+}
+.btn:active{background:var(--line)}
+.btn.pri{background:var(--amber);color:#12161b;border-color:var(--amber)}
+.btn.pri:active{background:var(--amber-deep)}
+.btn.sm{padding:5px 9px;min-height:30px;font-size:11px}
+.btn.wide{width:100%}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn.ghost{background:transparent}
+.stepper{display:flex;align-items:stretch;border:1px solid var(--line-hot);background:var(--steel-3)}
+.stepper button{width:38px;min-height:36px;display:grid;place-items:center;font-family:"Chakra Petch",sans-serif;
+  font-weight:700;font-size:17px;color:var(--ink)}
+.stepper button:disabled{opacity:.3}
+.stepper .val{min-width:42px;display:grid;place-items:center;font-family:"JetBrains Mono",monospace;font-weight:700;
+  font-size:15px;border-inline:1px solid var(--line-hot);font-variant-numeric:tabular-nums}
+
+/* status */
+.stat{font-family:"Chakra Petch",sans-serif;font-weight:600;font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  padding:2px 6px;border:1px solid;white-space:nowrap}
+.st-run{color:var(--grow);border-color:rgba(120,209,107,.5);background:rgba(120,209,107,.09)}
+.st-star{color:var(--warn);border-color:rgba(255,201,77,.5);background:rgba(255,201,77,.09)}
+.st-full{color:var(--volt);border-color:rgba(92,200,245,.45);background:rgba(92,200,245,.09)}
+.st-pow{color:var(--ember);border-color:rgba(255,93,59,.5);background:rgba(255,93,59,.09)}
+.st-off{color:var(--ink-3);border-color:var(--line)}
+
+.thru{height:4px;background:#0a0d11;border:1px solid var(--line);margin-top:8px;position:relative;overflow:hidden}
+.thru i{position:absolute;inset:0 auto 0 0;background:var(--grow);width:0%;transition:width .25s linear;display:block}
+.thru i.belt{background-image:repeating-linear-gradient(115deg,rgba(0,0,0,.3) 0 5px,rgba(0,0,0,0) 5px 10px);
+  background-size:200% 100%;animation:crawl 1s linear infinite}
+.thru i.warn{background:var(--warn)}
+.thru i.bad{background:var(--ember)}
+
+/* progress */
+.prog{height:7px;background:#0a0d11;border:1px solid var(--line);position:relative;overflow:hidden;margin-top:5px}
+.prog i{position:absolute;inset:0 auto 0 0;background:var(--amber);width:0%;display:block;transition:width .3s ease}
+.prog i.done{background:var(--grow)}
+
+/* inventory grid */
+.inv{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:7px}
+.slot{background:var(--steel);border:1px solid var(--line);padding:7px 8px;display:flex;gap:7px;align-items:flex-start}
+.slot .nm{font-size:11.5px;line-height:1.2;color:var(--ink-2)}
+.slot .qt{font-family:"JetBrains Mono",monospace;font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;line-height:1.2}
+.slot .rt{font-family:"JetBrains Mono",monospace;font-size:10.5px;font-variant-numeric:tabular-nums}
+.rt.up{color:var(--grow)} .rt.dn{color:var(--ember)} .rt.flat{color:var(--ink-3)}
+.capbar{height:3px;background:#0a0d11;margin-top:4px;position:relative}
+.capbar i{position:absolute;inset:0 auto 0 0;background:var(--line-hot);display:block}
+.capbar i.max{background:var(--volt)}
+
+/* node cards */
+.pur{font-family:"Chakra Petch",sans-serif;font-weight:600;font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  padding:2px 5px;border:1px solid}
+.pur.impure{color:var(--ink-3);border-color:var(--line)}
+.pur.normal{color:var(--volt);border-color:rgba(92,200,245,.45)}
+.pur.pure{color:var(--amber);border-color:rgba(255,154,60,.5);background:rgba(255,154,60,.08)}
+
+/* clock slider */
+.clock{display:flex;align-items:center;gap:9px;margin-top:9px;padding-top:9px;border-top:1px dashed var(--line)}
+input[type=range]{-webkit-appearance:none;appearance:none;flex:1;height:22px;background:transparent}
+input[type=range]::-webkit-slider-runnable-track{height:4px;background:var(--line-hot)}
+input[type=range]::-moz-range-track{height:4px;background:var(--line-hot)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;background:var(--amber);
+  margin-top:-8px;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border:none;background:var(--amber);
+  clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+select{font:inherit;font-size:13px;background:var(--steel-3);color:var(--ink);border:1px solid var(--line-hot);
+  padding:7px 9px;min-height:36px;max-width:100%}
+
+/* costs */
+.costs{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.cost{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;padding:2px 6px 2px 3px;
+  border:1px solid var(--line);background:var(--steel-2)}
+.cost.no{border-color:rgba(255,93,59,.5)}
+.cost.no .mono{color:var(--ember)}
+.cost .mono{font-size:11.5px}
+
+/* nav */
+nav{border-top:1px solid var(--line);background:var(--steel-2);padding-bottom:env(safe-area-inset-bottom)}
+.navin{max-width:600px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
+.tab{padding:8px 2px 9px;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--ink-3);
+  border-top:2px solid transparent;position:relative}
+.tab span{font-family:"Chakra Petch",sans-serif;font-weight:600;font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+.tab .g{width:17px;height:17px;background:currentColor}
+.tab[aria-selected="true"]{color:var(--amber);border-top-color:var(--amber);background:rgba(255,154,60,.06)}
+.tab .dot{position:absolute;top:5px;right:calc(50% - 18px);width:6px;height:6px;background:var(--amber);border-radius:50%}
+.g-hub{clip-path:polygon(50% 0,100% 30%,100% 70%,50% 100%,0 70%,0 30%)}
+.g-mine{clip-path:polygon(0 100%,28% 44%,58% 74%,100% 12%,100% 0,72% 0,50% 46%,26% 22%,0 74%)}
+.g-make{clip-path:polygon(0 100%,0 42%,26% 42%,26% 20%,52% 42%,52% 20%,78% 42%,78% 0,100% 0,100% 100%)}
+.g-pow{clip-path:polygon(58% 0,10% 56%,44% 56%,34% 100%,90% 40%,54% 40%)}
+.g-dep{clip-path:polygon(0 22%,50% 0,100% 22%,100% 100%,0 100%)}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(5,7,9,.72);z-index:40;display:flex;align-items:flex-end;justify-content:center}
+.sheet{width:100%;max-width:600px;max-height:86dvh;background:var(--steel);border:1px solid var(--line-hot);
+  border-bottom:none;display:flex;flex-direction:column;overflow:hidden}
+.sheet-h{display:flex;align-items:center;gap:9px;padding:12px 14px;border-bottom:1px solid var(--line);
+  background:var(--steel-2);flex:none}
+.sheet-h h3{margin:0;font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:14px;letter-spacing:.1em;
+  text-transform:uppercase}
+.sheet-b{overflow-y:auto;padding:12px 14px;padding-bottom:calc(20px + env(safe-area-inset-bottom));
+  display:flex;flex-direction:column;gap:9px;overscroll-behavior:contain}
+.sheet-b p{margin:0;font-size:13.5px;color:var(--ink-2)}
+.sheet-b p b{color:var(--ink);font-weight:600}
+.pick{width:100%;text-align:left;background:var(--steel-2);border:1px solid var(--line);padding:9px 10px}
+.pick:active{border-color:var(--amber)}
+.pick[disabled]{opacity:.4}
+.flow{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:6px}
+.arrow{color:var(--ink-3);font-size:12px;margin-inline:1px}
+
+.toast{position:fixed;left:50%;bottom:calc(74px + env(safe-area-inset-bottom));transform:translateX(-50%);
+  background:var(--steel-3);border:1px solid var(--line-hot);color:var(--ink);padding:8px 14px;font-size:13px;
+  z-index:60;pointer-events:none;max-width:88vw;text-align:center;
+  clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)}
+.toast.bad{border-color:rgba(255,93,59,.6);color:var(--ember)}
+
+.empty{color:var(--ink-3);font-size:13px;padding:14px;border:1px dashed var(--line);text-align:center}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.tag{font-size:10.5px;font-family:"Chakra Petch",sans-serif;font-weight:600;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--volt);border:1px solid rgba(92,200,245,.35);padding:1px 5px;background:rgba(92,200,245,.07)}
+.tag.g{color:var(--grow);border-color:rgba(120,209,107,.35);background:rgba(120,209,107,.07)}
+hr.dash{border:none;border-top:1px dashed var(--line);margin:9px 0 0}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+
+<header>
+  <div class="hud">
+    <div class="hud-top">
+      <div class="mark">A</div>
+      <div class="wordmark">Pocket Foundry<small id="hudSub">Arclight Industries</small></div>
+      <div class="hud-right">
+        <div class="pill">Tier <b id="hudTier">1</b></div>
+        <button id="helpBtn" aria-label="How to play">?</button>
+      </div>
+    </div>
+    <div class="meter">
+      <div class="meter-row">
+        <span class="lbl">Grid</span>
+        <span class="mono" id="hudPow">0 / 0 MW</span>
+        <span class="grow"></span>
+        <span class="stat st-run" id="hudState">Nominal</span>
+      </div>
+      <div class="bar"><i class="bar-fill" id="hudBar"></i><i class="bar-cap" id="hudCap" style="left:100%"></i></div>
+    </div>
+  </div>
+</header>
+
+<main id="main"><div class="wrap" id="view"></div></main>
+
+<nav>
+  <div class="navin" role="tablist">
+    <button class="tab" role="tab" data-tab="hub"   aria-selected="true"><i class="g g-hub"></i><span>Hub</span></button>
+    <button class="tab" role="tab" data-tab="mine"  aria-selected="false"><i class="g g-mine"></i><span>Mine</span></button>
+    <button class="tab" role="tab" data-tab="make"  aria-selected="false"><i class="g g-make"></i><span>Make</span></button>
+    <button class="tab" role="tab" data-tab="power" aria-selected="false"><i class="g g-pow"></i><span>Power</span></button>
+    <button class="tab" role="tab" data-tab="depot" aria-selected="false"><i class="g g-dep"></i><span>Depot</span></button>
+  </div>
+</nav>
+
+<script>
+"use strict";
+/* ============================================================
+   POCKET FOUNDRY - factory sim
+   All machine rates are expressed per minute and derived from
+   (quantity * 60 / cycleSeconds), so recipe ratios stay exact.
+   ============================================================ */
+
+/* ---------- ITEMS ---------- */
+/* k:kind (raw|ingot|part|fluid|proj)  c:colour  p:resource-sink points  cap:base buffer */
+const ITEMS = {
+  iron_ore:{n:"Iron Ore",k:"raw",c:"#7d8794",p:1},
+  copper_ore:{n:"Copper Ore",k:"raw",c:"#d9793f",p:3},
+  limestone:{n:"Limestone",k:"raw",c:"#cdbb98",p:2},
+  coal:{n:"Coal",k:"raw",c:"#454b55",p:3},
+  caterium_ore:{n:"Caterium Ore",k:"raw",c:"#e8c257",p:7},
+  leaves:{n:"Leaves",k:"raw",c:"#6fbf5a",p:3},
+  wood:{n:"Wood",k:"raw",c:"#8a6a3c",p:30},
+  biomass:{n:"Biomass",k:"part",c:"#7a8f4a",p:12},
+  solid_biofuel:{n:"Solid Biofuel",k:"part",c:"#b7c94d",p:48},
+
+  crude_oil:{n:"Crude Oil",k:"fluid",c:"#4a3d52",p:0,fl:1},
+  water:{n:"Water",k:"fluid",c:"#3f93c4",p:0,fl:1},
+  heavy_oil_residue:{n:"Heavy Oil Residue",k:"fluid",c:"#5a4466",p:0,fl:1},
+  polymer_resin:{n:"Polymer Resin",k:"fluid",c:"#c9c3a6",p:0,fl:1},
+  fuel:{n:"Fuel",k:"fluid",c:"#e0a33c",p:0,fl:1},
+
+  iron_ingot:{n:"Iron Ingot",k:"ingot",c:"#cdd5de",p:2},
+  copper_ingot:{n:"Copper Ingot",k:"ingot",c:"#e08a4a",p:6},
+  steel_ingot:{n:"Steel Ingot",k:"ingot",c:"#66707c",p:8},
+  caterium_ingot:{n:"Caterium Ingot",k:"ingot",c:"#f2d264",p:42},
+
+  iron_plate:{n:"Iron Plate",k:"part",c:"#5f87b3",p:6},
+  iron_rod:{n:"Iron Rod",k:"part",c:"#b7c2cd",p:4},
+  screw:{n:"Screw",k:"part",c:"#55606d",p:2},
+  wire:{n:"Wire",k:"part",c:"#e8a25c",p:6},
+  cable:{n:"Cable",k:"part",c:"#c9713a",p:24},
+  concrete:{n:"Concrete",k:"part",c:"#b9b3a4",p:12},
+  copper_sheet:{n:"Copper Sheet",k:"part",c:"#e09a5e",p:24},
+  steel_beam:{n:"Steel Beam",k:"part",c:"#46586b",p:64},
+  steel_pipe:{n:"Steel Pipe",k:"part",c:"#8795a4",p:24},
+  quickwire:{n:"Quickwire",k:"part",c:"#f5d76b",p:17},
+  plastic:{n:"Plastic",k:"part",c:"#4fb3d9",p:75},
+  rubber:{n:"Rubber",k:"part",c:"#5b6068",p:60},
+  petroleum_coke:{n:"Petroleum Coke",k:"part",c:"#7a6350",p:20},
+
+  rip:{n:"Reinforced Iron Plate",k:"part",c:"#9aa8c4",p:120},
+  rotor:{n:"Rotor",k:"part",c:"#b57a3c",p:140},
+  stator:{n:"Stator",k:"part",c:"#7fa3c9",p:240},
+  motor:{n:"Motor",k:"part",c:"#d96a4a",p:1520},
+  modular_frame:{n:"Modular Frame",k:"part",c:"#cfd6e0",p:408},
+  eib:{n:"Encased Industrial Beam",k:"part",c:"#8f8a80",p:528},
+  circuit_board:{n:"Circuit Board",k:"part",c:"#4fbf7a",p:696},
+  ai_limiter:{n:"AI Limiter",k:"part",c:"#ff9a3c",p:920},
+  computer:{n:"Computer",k:"part",c:"#5cc8f5",p:17260},
+  hmf:{n:"Heavy Modular Frame",k:"part",c:"#8d7fae",p:9004},
+
+  smart_plating:{n:"Smart Plating",k:"proj",c:"#78d16b",p:1892},
+  versatile_framework:{n:"Versatile Framework",k:"proj",c:"#ffc94d",p:2804},
+  automated_wiring:{n:"Automated Wiring",k:"proj",c:"#ff8a5c",p:3904},
+  modular_engine:{n:"Modular Engine",k:"proj",c:"#b98cff",p:8352},
+  adaptive_control_unit:{n:"Adaptive Control Unit",k:"proj",c:"#ff6fae",p:64570}
+};
+const ITEM_IDS = Object.keys(ITEMS);
+
+/* ---------- MACHINES ---------- */
+/* mw: power draw. cost: one-time build cost (100% refunded on dismantle). */
+const MACH = {
+  miner_mk1:{n:"Miner Mk.1",mw:5,cost:{iron_plate:10,concrete:10},base:60},
+  miner_mk2:{n:"Miner Mk.2",mw:12,cost:{eib:10,steel_pipe:10,modular_frame:20},base:120},
+  miner_mk3:{n:"Miner Mk.3",mw:30,cost:{steel_pipe:50,motor:20,computer:10},base:240},
+  oil_extractor:{n:"Oil Extractor",mw:40,cost:{copper_sheet:60,motor:40,eib:30},base:120},
+  water_extractor:{n:"Water Extractor",mw:20,cost:{copper_sheet:20,rip:10,rotor:10},base:120},
+  smelter:{n:"Smelter",mw:4,cost:{iron_rod:5,wire:8}},
+  constructor:{n:"Constructor",mw:4,cost:{rip:2,cable:8}},
+  assembler:{n:"Assembler",mw:15,cost:{rip:8,rotor:4,cable:20}},
+  foundry:{n:"Foundry",mw:16,cost:{modular_frame:10,rotor:10,concrete:20}},
+  manufacturer:{n:"Manufacturer",mw:55,cost:{motor:5,cable:50,plastic:100,steel_pipe:50}},
+  refinery:{n:"Refinery",mw:30,cost:{copper_sheet:30,eib:20,motor:10}},
+  biomass_burner:{n:"Biomass Burner",mw:-30,cost:{iron_plate:15,iron_rod:15,wire:25},
+    fuels:["leaves","wood","biomass","solid_biofuel"]},
+  coal_generator:{n:"Coal Generator",mw:-75,cost:{rip:20,rotor:10,cable:30},
+    fuels:["coal","petroleum_coke"],water:45},
+  fuel_generator:{n:"Fuel Generator",mw:-150,cost:{computer:15,hmf:50,motor:50,rubber:50},
+    fuels:["fuel"]},
+  storage_container:{n:"Storage Container",mw:0,cost:{iron_plate:10,iron_rod:10}},
+  resource_sink:{n:"Resource Sink",mw:30,cost:{rip:15,cable:30,concrete:45},base:120}
+};
+/* fuel energy in MJ -> burn/min = 60 * MW / MJ */
+const FUEL_MJ = {leaves:30,wood:100,biomass:180,solid_biofuel:450,coal:300,petroleum_coke:180,fuel:750};
+
+/* ---------- RECIPES ---------- */
+/* t: cycle seconds. in/out quantities per cycle. alt: requires catalog purchase. */
+const RECIPES = {
+  iron_ingot:{n:"Iron Ingot",m:"smelter",t:2,in:{iron_ore:1},out:{iron_ingot:1}},
+  copper_ingot:{n:"Copper Ingot",m:"smelter",t:2,in:{copper_ore:1},out:{copper_ingot:1}},
+  caterium_ingot:{n:"Caterium Ingot",m:"smelter",t:4,in:{caterium_ore:3},out:{caterium_ingot:1}},
+
+  steel_ingot:{n:"Steel Ingot",m:"foundry",t:4,in:{iron_ore:3,coal:3},out:{steel_ingot:3}},
+
+  iron_plate:{n:"Iron Plate",m:"constructor",t:6,in:{iron_ingot:3},out:{iron_plate:2}},
+  iron_rod:{n:"Iron Rod",m:"constructor",t:4,in:{iron_ingot:1},out:{iron_rod:1}},
+  screw:{n:"Screw",m:"constructor",t:6,in:{iron_rod:1},out:{screw:4}},
+  wire:{n:"Wire",m:"constructor",t:4,in:{copper_ingot:1},out:{wire:2}},
+  cable:{n:"Cable",m:"constructor",t:2,in:{wire:2},out:{cable:1}},
+  concrete:{n:"Concrete",m:"constructor",t:4,in:{limestone:3},out:{concrete:1}},
+  copper_sheet:{n:"Copper Sheet",m:"constructor",t:6,in:{copper_ingot:2},out:{copper_sheet:1}},
+  steel_beam:{n:"Steel Beam",m:"constructor",t:4,in:{steel_ingot:4},out:{steel_beam:1}},
+  steel_pipe:{n:"Steel Pipe",m:"constructor",t:6,in:{steel_ingot:3},out:{steel_pipe:2}},
+  quickwire:{n:"Quickwire",m:"constructor",t:5,in:{caterium_ingot:1},out:{quickwire:5}},
+  biomass_leaves:{n:"Biomass (Leaves)",m:"constructor",t:5,in:{leaves:10},out:{biomass:5}},
+  biomass_wood:{n:"Biomass (Wood)",m:"constructor",t:4,in:{wood:4},out:{biomass:20}},
+  solid_biofuel:{n:"Solid Biofuel",m:"constructor",t:8,in:{biomass:8},out:{solid_biofuel:4}},
+
+  rip:{n:"Reinforced Iron Plate",m:"assembler",t:12,in:{iron_plate:6,screw:12},out:{rip:1}},
+  rotor:{n:"Rotor",m:"assembler",t:15,in:{iron_rod:5,screw:25},out:{rotor:1}},
+  modular_frame:{n:"Modular Frame",m:"assembler",t:60,in:{rip:3,iron_rod:12},out:{modular_frame:2}},
+  stator:{n:"Stator",m:"assembler",t:12,in:{steel_pipe:3,wire:8},out:{stator:1}},
+  motor:{n:"Motor",m:"assembler",t:12,in:{rotor:2,stator:2},out:{motor:1}},
+  eib:{n:"Encased Industrial Beam",m:"assembler",t:10,in:{steel_beam:4,concrete:5},out:{eib:1}},
+  circuit_board:{n:"Circuit Board",m:"assembler",t:8,in:{copper_sheet:2,plastic:4},out:{circuit_board:1}},
+  ai_limiter:{n:"AI Limiter",m:"assembler",t:12,in:{copper_sheet:5,quickwire:20},out:{ai_limiter:1}},
+  smart_plating:{n:"Smart Plating",m:"assembler",t:30,in:{rip:1,rotor:1},out:{smart_plating:1}},
+  versatile_framework:{n:"Versatile Framework",m:"assembler",t:24,in:{modular_frame:1,steel_beam:12},out:{versatile_framework:2}},
+  automated_wiring:{n:"Automated Wiring",m:"assembler",t:24,in:{stator:1,cable:20},out:{automated_wiring:1}},
+
+  hmf:{n:"Heavy Modular Frame",m:"manufacturer",t:30,in:{modular_frame:5,steel_pipe:15,eib:5,screw:100},out:{hmf:1}},
+  computer:{n:"Computer",m:"manufacturer",t:24,in:{circuit_board:10,cable:9,plastic:18,screw:52},out:{computer:1}},
+  modular_engine:{n:"Modular Engine",m:"manufacturer",t:60,in:{motor:2,rubber:15,smart_plating:2},out:{modular_engine:1}},
+  adaptive_control_unit:{n:"Adaptive Control Unit",m:"manufacturer",t:120,
+    in:{automated_wiring:5,circuit_board:5,hmf:1,computer:2},out:{adaptive_control_unit:2}},
+
+  plastic:{n:"Plastic",m:"refinery",t:6,in:{crude_oil:3},out:{plastic:2,heavy_oil_residue:1}},
+  rubber:{n:"Rubber",m:"refinery",t:6,in:{crude_oil:3},out:{rubber:2,heavy_oil_residue:2}},
+  fuel:{n:"Fuel",m:"refinery",t:6,in:{crude_oil:6},out:{fuel:4,polymer_resin:3}},
+  residual_fuel:{n:"Residual Fuel",m:"refinery",t:6,in:{heavy_oil_residue:6},out:{fuel:4}},
+  residual_plastic:{n:"Residual Plastic",m:"refinery",t:6,in:{polymer_resin:6,water:2},out:{plastic:2}},
+  residual_rubber:{n:"Residual Rubber",m:"refinery",t:6,in:{polymer_resin:4,water:4},out:{rubber:2}},
+  petroleum_coke:{n:"Petroleum Coke",m:"refinery",t:6,in:{heavy_oil_residue:4},out:{petroleum_coke:12}},
+
+  /* --- alternates, bought from the Requisition Catalog --- */
+  alt_cast_screw:{n:"Cast Screw",m:"constructor",t:24,in:{iron_ingot:5},out:{screw:20},alt:1},
+  alt_iron_wire:{n:"Iron Wire",m:"constructor",t:24,in:{iron_ingot:5},out:{wire:9},alt:1},
+  alt_steel_rod:{n:"Steel Rod",m:"constructor",t:5,in:{steel_ingot:1},out:{iron_rod:4},alt:1},
+  alt_stitched_plate:{n:"Stitched Iron Plate",m:"assembler",t:32,in:{iron_plate:10,wire:20},out:{rip:3},alt:1},
+  alt_coated_cable:{n:"Coated Cable",m:"refinery",t:8,in:{wire:5,heavy_oil_residue:2},out:{cable:9},alt:1},
+  alt_solid_steel:{n:"Solid Steel Ingot",m:"foundry",t:3,in:{iron_ingot:2,coal:2},out:{steel_ingot:3},alt:1},
+  alt_copper_alloy:{n:"Copper Alloy Ingot",m:"foundry",t:12,in:{copper_ore:5,iron_ore:5},out:{copper_ingot:10},alt:1},
+  alt_pure_iron:{n:"Pure Iron Ingot",m:"refinery",t:12,in:{iron_ore:7,water:4},out:{iron_ingot:13},alt:1},
+  alt_steamed_sheet:{n:"Steamed Copper Sheet",m:"refinery",t:8,in:{copper_ingot:3,water:3},out:{copper_sheet:3},alt:1},
+  alt_recycled_plastic:{n:"Recycled Plastic",m:"refinery",t:12,in:{rubber:6,fuel:6},out:{plastic:12},alt:1},
+  alt_recycled_rubber:{n:"Recycled Rubber",m:"refinery",t:12,in:{plastic:6,fuel:6},out:{rubber:12},alt:1}
+};
+
+/* ---------- RESOURCE NODES ---------- */
+const PURITY = {impure:.5, normal:1, pure:2};
+const NODES = [
+  ["iron_1","iron_ore","normal",null],["iron_2","iron_ore","normal",null],["iron_3","iron_ore","impure","m_logistics"],
+  ["iron_4","iron_ore","normal","m_base"],["iron_5","iron_ore","pure","m_clearing"],
+  ["iron_6","iron_ore","pure","m_steel"],["iron_7","iron_ore","normal","m_grid"],
+  ["copper_1","copper_ore","normal",null],["copper_2","copper_ore","normal","m_logistics"],
+  ["copper_3","copper_ore","impure","m_assembly"],["copper_4","copper_ore","pure","m_grid"],
+  ["lime_1","limestone","normal",null],["lime_2","limestone","normal","m_logistics"],
+  ["lime_3","limestone","pure","m_clearing"],["lime_4","limestone","normal","m_steel"],
+  ["coal_1","coal","normal","m_coal"],["coal_2","coal","normal","m_coal"],
+  ["coal_3","coal","pure","m_steel"],["coal_4","coal","normal","m_grid"],["coal_5","coal","normal","m_grid"],
+  ["cat_1","caterium_ore","normal","m_caterium"],["cat_2","caterium_ore","normal","m_caterium"],
+  ["cat_3","caterium_ore","pure","m_aero"],
+  ["oil_1","crude_oil","normal","m_oil"],["oil_2","crude_oil","normal","m_oil"],
+  ["oil_3","crude_oil","pure","m_fluids"]
+].map(function(a){return {id:a[0],res:a[1],pur:a[2],req:a[3]};});
+
+/* ---------- MILESTONES ---------- */
+const MILESTONES = [
+  {id:"m_base",tier:1,n:"Base Building",cost:{iron_rod:20,iron_plate:10},
+   un:["mach:storage_container","node:iron_4"]},
+  {id:"m_logistics",tier:1,n:"Field Logistics",cost:{iron_plate:40,concrete:20},
+   un:["node:copper_2","node:lime_2","node:iron_3"]},
+
+  {id:"m_assembly",tier:2,n:"Part Assembly",cost:{iron_plate:50,iron_rod:50,wire:25},
+   un:["mach:assembler","rec:rip","rec:rotor","rec:copper_sheet","rec:smart_plating","node:copper_3"]},
+  {id:"m_clearing",tier:2,n:"Site Clearing",cost:{concrete:100,cable:50},
+   un:["node:iron_5","node:lime_3","rec:biomass_wood","rec:solid_biofuel"]},
+  {id:"m_sink",tier:2,n:"Resource Sink Program",cost:{concrete:50,wire:100,iron_plate:50},
+   un:["mach:resource_sink","feat:catalog"]},
+
+  {id:"m_coal",tier:3,n:"Coal Power",cost:{concrete:100,rip:50,cable:100},
+   un:["mach:coal_generator","mach:water_extractor","node:coal_1","node:coal_2"]},
+  {id:"m_steel",tier:3,n:"Basic Steel Production",cost:{concrete:200,rip:100,rotor:50},
+   un:["mach:foundry","rec:steel_ingot","rec:steel_beam","rec:steel_pipe","rec:modular_frame",
+       "rec:versatile_framework","node:iron_6","node:coal_3","node:lime_4"]},
+
+  {id:"m_advsteel",tier:4,n:"Advanced Steel Production",cost:{modular_frame:100,steel_pipe:200,cable:100},
+   un:["rec:eib","rec:stator","rec:motor","rec:automated_wiring","mach:miner_mk2","feat:overclock"]},
+  {id:"m_grid",tier:4,n:"Expanded Power Grid",cost:{steel_beam:100,eib:100,concrete:200},
+   un:["node:coal_4","node:coal_5","node:iron_7","node:copper_4"]},
+
+  {id:"m_oil",tier:5,n:"Oil Processing",cost:{steel_pipe:200,copper_sheet:100,motor:50},
+   un:["mach:refinery","mach:oil_extractor","rec:plastic","rec:rubber","rec:fuel","node:oil_1","node:oil_2"]},
+  {id:"m_industrial",tier:5,n:"Industrial Manufacturing",cost:{motor:100,steel_pipe:200,plastic:300,eib:100},
+   un:["mach:manufacturer","rec:circuit_board","rec:computer","rec:hmf"]},
+
+  {id:"m_fluids",tier:6,n:"Alternative Fluid Transport",cost:{motor:50,plastic:100,rubber:100},
+   un:["rec:residual_fuel","rec:residual_plastic","rec:residual_rubber","rec:petroleum_coke",
+       "mach:fuel_generator","node:oil_3"]},
+  {id:"m_caterium",tier:6,n:"Caterium Electronics",cost:{computer:20,plastic:200,rubber:200,cable:300},
+   un:["rec:caterium_ingot","rec:quickwire","rec:ai_limiter","node:cat_1","node:cat_2"]},
+
+  {id:"m_aero",tier:7,n:"Aeronautical Engineering",cost:{hmf:50,computer:50,ai_limiter:100,rubber:500},
+   un:["rec:modular_engine","rec:adaptive_control_unit","mach:miner_mk3","node:cat_3"]}
+];
+
+/* ---------- ASCENT ELEVATOR PHASES ---------- */
+const PHASES = [
+  {n:"Phase 1 - Distribution Platform",cost:{smart_plating:50},tier:3},
+  {n:"Phase 2 - Construction Dock",cost:{smart_plating:200,versatile_framework:200,automated_wiring:50},tier:5},
+  {n:"Phase 3 - Main Body",cost:{versatile_framework:400,automated_wiring:100,computer:100,hmf:50},tier:7},
+  {n:"Phase 4 - Ascent Assembly",cost:{modular_engine:250,adaptive_control_unit:100,hmf:200},tier:8}
+];
+
+/* ---------- REQUISITION CATALOG ---------- */
+const CATALOG = [
+  {id:"alt_cast_screw",n:"Cast Screw",d:"Skip the rod step: 12.5 iron ingot to 50 screws per constructor."},
+  {id:"alt_iron_wire",n:"Iron Wire",d:"Wire from iron. Takes all pressure off your copper nodes."},
+  {id:"alt_steel_rod",n:"Steel Rod",d:"12 steel ingot to 48 rods. Four times the rod throughput."},
+  {id:"alt_stitched_plate",n:"Stitched Iron Plate",d:"Reinforced plate from wire instead of screws."},
+  {id:"alt_solid_steel",n:"Solid Steel Ingot",d:"Ingot-fed steel: 60 steel/min per foundry instead of 45."},
+  {id:"alt_coated_cable",n:"Coated Cable",d:"67.5 cable/min from 37.5 wire, and it eats heavy oil residue."},
+  {id:"alt_copper_alloy",n:"Copper Alloy Ingot",d:"Foundry copper. 25 copper + 25 iron ore to 50 ingots."},
+  {id:"alt_pure_iron",n:"Pure Iron Ingot",d:"35 ore and 20 water to 65 iron ingots. The best iron ratio there is."},
+  {id:"alt_steamed_sheet",n:"Steamed Copper Sheet",d:"22.5 sheet/min per refinery, water-assisted."},
+  {id:"alt_recycled_plastic",n:"Recycled Plastic",d:"Closes the oil loop. Needs rubber and fuel."},
+  {id:"alt_recycled_rubber",n:"Recycled Rubber",d:"The other half of the loop. Pairs with Recycled Plastic."},
+  {id:"buy_storage",n:"Storage Expansion",d:"+250 buffer on every solid item, +500 on every fluid.",repeat:10}
+];
+const OC_EXP = 1.321928; /* power scales with clock^log2(2.5) */
+</script>
+
+<script>
+"use strict";
+/* ============================================================
+   STATE + SIMULATION
+   ============================================================ */
+const NODE_BY_ID = {};
+NODES.forEach(function(n){ NODE_BY_ID[n.id]=n; });
+
+const START_MACH = ["smelter","constructor","miner_mk1","biomass_burner"];
+const START_REC  = ["iron_ingot","copper_ingot","iron_plate","iron_rod","screw","wire","cable",
+                    "concrete","biomass_leaves"];
+
+const SAVE_KEY = "pocket_foundry_v1";
+/* The hub's own reserve. Small enough that it powers nothing useful on its own,
+   large enough that a grid which has run out of fuel or water can always claw back. */
+const HUB_MW = 5;
+const OFFLINE_CAP = 4*3600;   /* four hours of catch-up */
+
+function freshState(){
+  const S = {
+    v:1, t:Date.now(),
+    inv:{leaves:250, iron_ore:30},
+    nodes:{ iron_1:{m:"miner_mk1",clk:1} },
+    groups:{ iron_ingot:{c:1,clk:1,on:1}, iron_rod:{c:1,clk:1,on:1} },
+    gens:{ biomass_burner:{c:1,f:"leaves"} },
+    water:0,
+    sink:{c:0,item:"iron_plate"},
+    store:0,
+    done:{}, mdep:{}, pdep:{},
+    un:{mach:{},rec:{},node:{},feat:{}},
+    phase:0, pts:0, vouch:0, vbought:0, cat:{},
+    stats:{playT:0, tapped:0, sunk:0}
+  };
+  START_MACH.forEach(function(m){ S.un.mach[m]=1; });
+  START_REC.forEach(function(r){ S.un.rec[r]=1; });
+  return S;
+}
+let S = freshState();
+
+/* runtime, never saved */
+const RT = { eff:{}, why:{}, flowIn:{}, flowOut:{}, demandMW:0, capMW:0, sat:1, load:0, genShort:{} };
+
+/* ---------- helpers ---------- */
+function solidCap(){ return 300 + 150*S.store + 250*(S.cat.buy_storage||0); }
+function fluidCap(){ return 600 + 300*S.store + 500*(S.cat.buy_storage||0); }
+function capOf(id){ return ITEMS[id].fl ? fluidCap() : solidCap(); }
+function have(id){ return S.inv[id]||0; }
+function machineOf(rid){ return MACH[RECIPES[rid].m]; }
+function recUnlocked(rid){ return !!S.un.rec[rid]; }
+function machUnlocked(m){ return !!S.un.mach[m]; }
+function nodeUnlocked(n){ return n.req===null || !!S.done[n.req]; }
+/* phases open the next tier band: start 1-2, p1 -> 3-4, p2 -> 5-6, p3 -> 7 */
+function maxTier(){ return [2,4,6,7,8][Math.min(S.phase,4)]; }
+
+/* per-cycle qty -> per-minute rate for one machine at 100% clock */
+function ratePerMin(rid, item, side){
+  const R = RECIPES[rid]; const q = (side==="in"?R.in:R.out)[item] || 0;
+  return q * 60 / R.t;
+}
+function canAfford(cost){ for(const k in cost){ if(have(k) < cost[k]-1e-9) return false; } return true; }
+function payCost(cost){ for(const k in cost){ S.inv[k] = have(k) - cost[k]; } }
+function refund(cost, mult){
+  for(const k in cost){ S.inv[k] = Math.min(capOf(k), have(k) + cost[k]*(mult===undefined?1:mult)); }
+}
+
+/* ============================================================
+   ONE SIMULATION STEP
+   ============================================================ */
+function step(dt){
+  const inv = S.inv;
+  const units = [];              /* every producer/consumer this tick */
+  let demandMW = 0;
+
+  /* --- miners on nodes --- */
+  for(const nid in S.nodes){
+    const nd = S.nodes[nid]; if(!nd || !nd.m) continue;
+    const node = NODE_BY_ID[nid]; if(!node) continue;
+    const M = MACH[nd.m];
+    const clk = nd.clk;
+    const mw = M.mw * Math.pow(clk, OC_EXP);
+    demandMW += mw;
+    const o = {}; o[node.res] = M.base * PURITY[node.pur] * clk;
+    units.push({key:"node:"+nid, mw:mw, i:null, o:o});
+  }
+  /* --- water extractors --- */
+  if(S.water>0){
+    const M = MACH.water_extractor;
+    demandMW += M.mw*S.water;
+    units.push({key:"water", mw:M.mw*S.water, i:null, o:{water:M.base*S.water}});
+  }
+  /* --- production groups --- */
+  for(const rid in S.groups){
+    const G = S.groups[rid]; if(!G || !G.c) continue;
+    const R = RECIPES[rid]; if(!R) continue;
+    if(!G.on){ RT.eff[rid]=0; RT.why[rid]="off"; continue; }
+    const M = MACH[R.m];
+    const mult = G.c * G.clk;
+    const mw = M.mw * G.c * Math.pow(G.clk, OC_EXP);
+    demandMW += mw;
+    const i={}, o={};
+    for(const k in R.in)  i[k] = R.in[k]  * 60 / R.t * mult;
+    for(const k in R.out) o[k] = R.out[k] * 60 / R.t * mult;
+    units.push({key:rid, mw:mw, i:i, o:o});
+  }
+  /* --- resource sinks --- */
+  if(S.sink.c>0 && S.sink.item){
+    const M = MACH.resource_sink;
+    demandMW += M.mw*S.sink.c;
+    const i={}; i[S.sink.item] = M.base*S.sink.c;
+    units.push({key:"sink", mw:M.mw*S.sink.c, i:i, o:null, sink:S.sink.item});
+  }
+
+  /* --- power supply --- */
+  let capMW = HUB_MW;
+  const gens = [];
+  RT.genShort = {};
+  for(const gid in S.gens){
+    const G = S.gens[gid]; if(!G || !G.c) continue;
+    const M = MACH[gid];
+    const f = G.f;
+    const fuelOK = (inv[f]||0) > 1e-9;
+    const waterOK = !M.water || (inv.water||0) > 1e-9;
+    if(fuelOK && waterOK){ capMW += (-M.mw)*G.c; gens.push({M:M,f:f,c:G.c}); }
+    else RT.genShort[gid] = fuelOK ? "water" : "fuel";
+  }
+  const sat = demandMW > 1e-9 ? Math.min(1, capMW/demandMW) : 1;
+  /* generators only carry the demand the hub reserve cannot, so they idle instead of burning fuel */
+  const genCap = capMW - HUB_MW;
+  const load = genCap > 1e-9 ? Math.min(1, Math.max(0, demandMW - HUB_MW)/genCap) : 0;
+  RT.demandMW = demandMW; RT.capMW = capMW; RT.sat = sat; RT.load = load;
+
+  /* burn fuel proportional to grid load, and record it so net rates stay honest */
+  const burned = {};
+  for(let gi=0; gi<gens.length; gi++){
+    const g = gens[gi];
+    const burn = 60 * (-g.M.mw) / FUEL_MJ[g.f] * g.c * load;   /* units per minute */
+    inv[g.f] = Math.max(0, (inv[g.f]||0) - burn*dt/60);
+    burned[g.f] = (burned[g.f]||0) + burn;
+    if(g.M.water){
+      const w = g.M.water * g.c * load;
+      inv.water = Math.max(0, (inv.water||0) - w*dt/60);
+      burned.water = (burned.water||0) + w;
+    }
+  }
+
+  /* --- shared input allocation --- */
+  const need = {};
+  for(let u=0; u<units.length; u++){
+    const un = units[u]; if(!un.i) continue;
+    for(const k in un.i) need[k] = (need[k]||0) + un.i[k]*sat;
+  }
+  const ratio = {};
+  for(const k in need){
+    const want = need[k]*dt/60;
+    ratio[k] = want <= 1e-12 ? 1 : Math.min(1, (inv[k]||0)/want);
+  }
+
+  /* --- resolve each unit --- */
+  const fin = {}, fout = {};
+  for(let u=0; u<units.length; u++){
+    const un = units[u];
+    let rIn = 1, rOut = 1;
+    if(un.i) for(const k in un.i) rIn = Math.min(rIn, ratio[k]);
+    if(un.o) for(const k in un.o){
+      const amt = un.o[k]*sat*dt/60;
+      if(amt > 1e-12){
+        const room = capOf(k) - (inv[k]||0);
+        rOut = Math.min(rOut, room <= 0 ? 0 : Math.min(1, room/amt));
+      }
+    }
+    const r = Math.min(rIn, rOut);
+    const eff = r * sat;
+
+    if(un.i) for(const k in un.i){
+      const amt = un.i[k]*eff*dt/60;
+      inv[k] = Math.max(0, (inv[k]||0) - amt);
+      fin[k] = (fin[k]||0) + un.i[k]*eff;
+      if(un.sink === k){
+        S.pts += amt * ITEMS[k].p;
+        S.stats.sunk += amt;
+      }
+    }
+    if(un.o) for(const k in un.o){
+      const amt = un.o[k]*eff*dt/60;
+      inv[k] = Math.min(capOf(k), (inv[k]||0) + amt);
+      fout[k] = (fout[k]||0) + un.o[k]*eff;
+    }
+
+    RT.eff[un.key] = eff;
+    RT.why[un.key] = sat < .995 ? "pow" : rIn < .995 ? "starve" : rOut < .995 ? "full" : "run";
+  }
+  for(const k in burned) fin[k] = (fin[k]||0) + burned[k];
+  RT.flowIn = fin; RT.flowOut = fout;
+  S.stats.playT += dt;
+}
+
+/* run `sec` seconds of simulation in stable sub-steps */
+function advance(sec){
+  if(sec <= 0) return;
+  const h = sec > 30 ? 1 : 0.25;
+  let n = Math.ceil(sec/h);
+  if(n > 20000) n = 20000;
+  const d = sec/n;
+  for(let i=0; i<n; i++) step(d);
+}
+
+/* ============================================================
+   SAVE / LOAD
+   ============================================================ */
+function save(){
+  S.t = Date.now();
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){}
+}
+function load(){
+  let raw = null;
+  try{ raw = localStorage.getItem(SAVE_KEY); }catch(e){}
+  if(!raw) return null;
+  try{
+    const o = JSON.parse(raw);
+    if(!o || o.v !== 1) return null;
+    const base = freshState();
+    for(const k in base) if(!(k in o)) o[k] = base[k];
+    for(const k in base.un) if(!o.un[k]) o.un[k] = base.un[k];
+    if(!o.stats) o.stats = base.stats;
+    return o;
+  }catch(e){ return null; }
+}
+function applyOffline(){
+  const gap = Math.min(OFFLINE_CAP, Math.max(0, (Date.now() - (S.t||Date.now()))/1000));
+  if(gap < 45) { S.t = Date.now(); return null; }
+  const before = {}; ITEM_IDS.forEach(function(i){ before[i] = have(i); });
+  const p0 = S.pts;
+  advance(gap);
+  S.t = Date.now();
+  const gained = [];
+  ITEM_IDS.forEach(function(i){
+    const d = have(i) - before[i];
+    if(d > 0.5) gained.push({id:i, d:d});
+  });
+  gained.sort(function(a,b){ return b.d*ITEMS[b.id].p - a.d*ITEMS[a.id].p; });
+  return {sec:gap, gained:gained.slice(0,12), pts:S.pts - p0};
+}
+</script>
+
+<script>
+"use strict";
+/* ============================================================
+   INTERFACE
+   ============================================================ */
+const view = document.getElementById("view");
+const main = document.getElementById("main");
+let TAB = "hub";
+let LIVE = [];
+let uid = 0;
+function nid(){ return "e"+(++uid); }
+function bind(id, fn){ LIVE.push({id:id, fn:fn}); }
+
+/* ---------- formatting ---------- */
+function fmt(n){
+  n = +n || 0; const a = Math.abs(n);
+  if(a >= 1e6) return (n/1e6).toFixed(a>=1e7?0:1)+"M";
+  if(a >= 1e4) return (n/1e3).toFixed(a>=1e5?0:1)+"k";
+  if(a >= 100) return String(Math.round(n));
+  return String(Math.round(n*10)/10);
+}
+function qty(n){ return fmt(Math.floor((+n||0)+1e-9)); }
+function rt(n){ const a = Math.abs(n); return a>=100 ? String(Math.round(n)) : String(Math.round(n*10)/10); }
+function mw(n){ return (Math.abs(n)>=100 ? Math.round(n) : Math.round(n*10)/10) + " MW"; }
+function dur(s){
+  s = Math.floor(s);
+  const h = Math.floor(s/3600), m = Math.floor(s%3600/60);
+  if(h) return h+"h "+m+"m";
+  if(m) return m+"m";
+  return s+"s";
+}
+function esc(t){ return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function ico(id, sm){
+  const I = ITEMS[id];
+  return '<i class="ico '+I.k+(sm?" sm":"")+'" style="--c:'+I.c+'"></i>';
+}
+function chip(id, n){
+  return '<span class="chip">'+ico(id,1)+'<span class="mono">'+qty(n)+'</span></span>';
+}
+function costList(cost){
+  let s = '<div class="costs">';
+  for(const k in cost){
+    const ok = have(k) >= cost[k]-1e-9;
+    s += '<span class="cost'+(ok?"":" no")+'">'+ico(k,1)+'<span class="mono">'+fmt(cost[k])+'</span> '+esc(ITEMS[k].n)+'</span>';
+  }
+  return s+"</div>";
+}
+function flowLine(rid){
+  const R = RECIPES[rid]; let s = '<div class="flow">';
+  let first = true;
+  for(const k in R.in){
+    if(!first) s += '<span class="arrow">+</span>'; first = false;
+    s += '<span class="chip">'+ico(k,1)+'<span class="mono">'+rt(R.in[k]*60/R.t)+'</span></span>';
+  }
+  if(first) s += '<span class="sub">node feed</span>';
+  s += '<span class="arrow">&rarr;</span>'; first = true;
+  for(const k in R.out){
+    if(!first) s += '<span class="arrow">+</span>'; first = false;
+    s += '<span class="chip">'+ico(k,1)+'<span class="mono">'+rt(R.out[k]*60/R.t)+'</span></span>';
+  }
+  return s+'<span class="sub" style="margin-left:2px">per min</span></div>';
+}
+const WHY = {
+  run:["RUNNING","st-run"], starve:["STARVED","st-star"], full:["BACKED UP","st-full"],
+  pow:["LOW POWER","st-pow"], off:["OFFLINE","st-off"]
+};
+
+/* ---------- toast ---------- */
+let toastT = 0;
+function toast(msg, bad){
+  const old = document.querySelector(".toast"); if(old) old.remove();
+  const d = document.createElement("div");
+  d.className = "toast"+(bad?" bad":""); d.textContent = msg;
+  document.body.appendChild(d);
+  clearTimeout(toastT);
+  toastT = setTimeout(function(){ if(d.parentNode) d.remove(); }, 2100);
+}
+
+/* ---------- sheet ---------- */
+function sheet(title, body, onOpen){
+  closeSheet();
+  const s = document.createElement("div");
+  s.className = "scrim";
+  s.innerHTML = '<div class="sheet"><div class="sheet-h"><h3>'+esc(title)+'</h3>'+
+    '<span class="grow"></span><button class="btn sm" data-close="1">Close</button></div>'+
+    '<div class="sheet-b">'+body+'</div></div>';
+  s.addEventListener("click", function(e){
+    if(e.target === s || e.target.closest("[data-close]")) closeSheet();
+  });
+  document.body.appendChild(s);
+  if(onOpen) onOpen(s);
+}
+function closeSheet(){ const s = document.querySelector(".scrim"); if(s) s.remove(); }
+
+/* ============================================================
+   TAB: HUB
+   ============================================================ */
+function tabHub(){
+  let s = "";
+
+  /* --- ascent elevator --- */
+  const ph = PHASES[S.phase];
+  s += '<div class="sec"><div class="sec-head"><h2>Ascent Elevator</h2><div class="rule"></div>'+
+       '<span class="note">'+(S.phase>=4?"complete":"phase "+(S.phase+1)+" of 4")+'</span></div>';
+  if(!ph){
+    s += '<div class="card lit"><div class="ttl" style="color:var(--grow)">Ascent Elevator Online</div>'+
+         '<div class="sub" style="margin-top:5px">All four phases delivered. Project Ascent is complete '+
+         'and the elevator is carrying freight off-world. Keep expanding, or start a new save from the Depot.</div></div>';
+  } else {
+    let done = true, rows = "";
+    for(const k in ph.cost){
+      const d = Math.min(ph.cost[k], S.pdep[k]||0);
+      if(d < ph.cost[k]) done = false;
+      const pc = Math.min(100, d/ph.cost[k]*100);
+      rows += '<div style="margin-top:9px"><div class="row" style="gap:7px">'+ico(k,1)+
+        '<span class="grow" style="font-size:12.5px">'+esc(ITEMS[k].n)+'</span>'+
+        '<span class="mono" style="font-size:12px;color:'+(d>=ph.cost[k]?"var(--grow)":"var(--ink-2)")+'">'+
+        fmt(d)+' / '+fmt(ph.cost[k])+'</span></div>'+
+        '<div class="prog"><i class="'+(d>=ph.cost[k]?"done":"")+'" style="width:'+pc+'%"></i></div></div>';
+    }
+    const gate = ["Unlocks Tier 3 &amp; 4","Unlocks Tier 5 &amp; 6","Unlocks Tier 7","Completes the project"][S.phase];
+    s += '<div class="card lit"><div class="row"><span class="ttl grow">'+esc(ph.n)+'</span>'+
+         '<span class="stat '+(done?"st-run":"st-off")+'">'+(done?"READY":"IN PROGRESS")+'</span></div>'+
+         '<div class="sub" style="margin-top:3px">'+gate+'</div>'+rows+
+         '<button class="btn wide '+(done?"pri":"")+'" style="margin-top:11px" data-act="phase">'+
+         (done?"Launch phase":"Deliver available parts")+'</button></div>';
+  }
+  s += "</div>";
+
+  /* --- milestones --- */
+  const mt = maxTier();
+  const open = MILESTONES.filter(function(m){ return !S.done[m.id] && m.tier <= mt; });
+  const locked = MILESTONES.filter(function(m){ return !S.done[m.id] && m.tier > mt; });
+  s += '<div class="sec"><div class="sec-head"><h2>Hub Milestones</h2><div class="rule"></div>'+
+       '<span class="note">'+Object.keys(S.done).length+' / '+MILESTONES.length+' done</span></div>';
+  if(!open.length) s += '<div class="empty">Every milestone up to Tier '+mt+' is complete. Deliver the next elevator phase to open more.</div>';
+  open.forEach(function(m){
+    const dep = S.mdep[m.id] || {};
+    let done = true, rows = "";
+    for(const k in m.cost){
+      const d = Math.min(m.cost[k], dep[k]||0);
+      if(d < m.cost[k]) done = false;
+      const pc = Math.min(100, d/m.cost[k]*100);
+      rows += '<div style="margin-top:7px"><div class="row" style="gap:7px">'+ico(k,1)+
+        '<span class="grow" style="font-size:12.5px">'+esc(ITEMS[k].n)+'</span>'+
+        '<span class="mono" style="font-size:12px;color:'+(d>=m.cost[k]?"var(--grow)":"var(--ink-2)")+'">'+
+        fmt(d)+' / '+fmt(m.cost[k])+'</span></div>'+
+        '<div class="prog"><i class="'+(d>=m.cost[k]?"done":"")+'" style="width:'+pc+'%"></i></div></div>';
+    }
+    s += '<div class="card"><div class="row"><span class="ttl grow">'+esc(m.n)+'</span>'+
+         '<span class="pill">T'+m.tier+'</span></div>'+rows+
+         '<div class="tags">'+unlockTags(m.un)+'</div>'+
+         '<button class="btn wide '+(done?"pri":"")+'" style="margin-top:10px" data-act="mdep" data-id="'+m.id+'">'+
+         (done?"Complete milestone":"Deposit available")+'</button></div>';
+  });
+  if(locked.length){
+    s += '<div class="card tight"><div class="lbl">Locked until the elevator advances</div><div class="tags">'+
+      locked.map(function(m){ return '<span class="tag">T'+m.tier+' '+esc(m.n)+'</span>'; }).join("")+'</div></div>';
+  }
+  s += "</div>";
+
+  /* --- readout --- */
+  const nMach = countMachines();
+  s += '<div class="sec"><div class="sec-head"><h2>Readout</h2><div class="rule"></div></div>'+
+    '<div class="card tight"><div class="inv" style="grid-template-columns:repeat(auto-fill,minmax(108px,1fr))">'+
+    statTile("Sink points", '<span id="stPts">'+fmt(S.pts)+'</span>')+
+    statTile("Vouchers", String(S.vouch))+
+    statTile("Machines", String(nMach))+
+    statTile("Grid draw", '<span id="stDraw">'+mw(RT.demandMW)+'</span>')+
+    statTile("Uptime", dur(S.stats.playT))+
+    statTile("Tier", String(Math.min(maxTier(),8)))+
+    '</div></div></div>';
+  bind("stPts", function(e){ e.textContent = fmt(S.pts); });
+  bind("stDraw", function(e){ e.textContent = mw(RT.demandMW); });
+  return s;
+}
+function statTile(label, val){
+  return '<div class="slot" style="display:block"><div class="lbl">'+label+'</div>'+
+         '<div class="qt" style="margin-top:2px">'+val+'</div></div>';
+}
+function unlockTags(list){
+  return list.map(function(u){
+    const p = u.split(":"), kind = p[0], id = p[1];
+    if(kind === "mach") return '<span class="tag g">'+esc(MACH[id].n)+'</span>';
+    if(kind === "rec")  return '<span class="tag">'+esc(RECIPES[id].n)+'</span>';
+    if(kind === "node") return '<span class="tag">'+esc(ITEMS[NODE_BY_ID[id].res].n)+' node</span>';
+    if(kind === "feat") return '<span class="tag g">'+(id==="catalog"?"Requisition Catalog":"Overclocking")+'</span>';
+    return "";
+  }).join("");
+}
+function countMachines(){
+  let n = 0;
+  for(const r in S.groups) n += S.groups[r].c;
+  for(const k in S.nodes) if(S.nodes[k] && S.nodes[k].m) n++;
+  for(const g in S.gens) n += S.gens[g].c;
+  return n + S.water + S.sink.c + S.store;
+}
+
+/* ============================================================
+   TAB: MINE
+   ============================================================ */
+const TAP = {iron_ore:5, copper_ore:5, limestone:5, coal:5, caterium_ore:5, leaves:25, wood:10};
+/* Anything you can mine by hand, so a grid that runs dry can always be restarted. */
+function tappable(){
+  const seen = {}, list = [];
+  NODES.forEach(function(n){
+    if(!nodeUnlocked(n) || n.res === "crude_oil" || seen[n.res]) return;
+    seen[n.res] = 1; list.push(n.res);
+  });
+  list.push("leaves");
+  if(S.done.m_clearing) list.push("wood");
+  return list;
+}
+function tabMine(){
+  let s = "";
+
+  /* manual */
+  let btns = "";
+  tappable().forEach(function(i){
+    btns += '<button class="btn" data-act="tap" data-id="'+i+'">'+ico(i,1)+'+'+TAP[i]+'</button>';
+  });
+  s += '<div class="sec"><div class="sec-head"><h2>Manual Extraction</h2><div class="rule"></div>'+
+       '<span class="note">no power</span></div>'+
+       '<div class="card"><div class="sub">Hand-mining bootstraps a factory and restarts a grid that has run '+
+       'out of fuel: one unit is enough to bring a generator back and let the miners feed it. '+
+       'It will never keep pace with a miner.</div>'+
+       '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:9px">'+btns+'</div></div></div>';
+
+  /* hand craft */
+  const hc = Object.keys(RECIPES).filter(function(r){
+    const R = RECIPES[r];
+    return S.un.rec[r] && !R.alt && (R.m === "constructor" || R.m === "smelter");
+  });
+  if(hc.length){
+    let rows = "";
+    hc.forEach(function(r){
+      const R = RECIPES[r];
+      let ok = true, cst = "";
+      for(const k in R.in){ if(have(k) < R.in[k]) ok = false; cst += ico(k,1)+'<span class="mono" style="font-size:11.5px">'+R.in[k]+'</span>'; }
+      let got = "";
+      for(const k in R.out) got += ico(k,1)+'<span class="mono" style="font-size:11.5px">'+R.out[k]+'</span>';
+      rows += '<button class="pick" data-act="craft" data-id="'+r+'"'+(ok?"":" disabled")+'>'+
+        '<div class="row"><span class="ttl grow" style="font-size:13.5px">'+esc(R.n)+'</span>'+
+        '<span class="stat st-off">Craft</span></div>'+
+        '<div class="flow">'+cst+'<span class="arrow">&rarr;</span>'+got+'</div></button>';
+    });
+    s += '<div class="sec"><div class="sec-head"><h2>Hand Craft</h2><div class="rule"></div>'+
+         '<span class="note">one cycle per tap</span></div>'+rows+'</div>';
+  }
+
+  /* nodes */
+  const byRes = {};
+  NODES.forEach(function(n){ if(nodeUnlocked(n)){ (byRes[n.res] = byRes[n.res] || []).push(n); } });
+  s += '<div class="sec"><div class="sec-head"><h2>Resource Nodes</h2><div class="rule"></div>'+
+       '<span class="note">one miner each</span></div>';
+  for(const res in byRes){
+    s += '<div class="card tight"><div class="row"><span>'+ico(res)+'</span>'+
+         '<span class="ttl grow" style="font-size:13.5px">'+esc(ITEMS[res].n)+'</span>'+
+         '<span class="mono" style="font-size:12px;color:var(--ink-3)">'+rt(nodeYield(res))+'/m</span></div>';
+    byRes[res].forEach(function(n){ s += nodeRow(n); });
+    s += "</div>";
+  }
+  s += "</div>";
+
+  /* water */
+  if(machUnlocked("water_extractor")){
+    const M = MACH.water_extractor;
+    s += '<div class="sec"><div class="sec-head"><h2>Water Extraction</h2><div class="rule"></div></div>'+
+      '<div class="card"><div class="row">'+ico("water")+
+      '<div class="grow"><div class="ttl" style="font-size:13.5px">Water Extractor</div>'+
+      '<div class="sub">'+M.base+'/min each &middot; '+mw(M.mw)+' each</div></div>'+
+      stepper("water", S.water)+'</div>'+
+      '<div class="sub" style="margin-top:8px">Supplying '+rt(S.water*M.base)+'/min. '+
+      'A coal generator drinks 45/min, so one extractor covers 2 generators with a little to spare.</div>'+
+      costList(M.cost)+'</div></div>';
+  }
+  /* storage */
+  if(machUnlocked("storage_container")){
+    s += '<div class="sec"><div class="sec-head"><h2>Storage</h2><div class="rule"></div></div>'+
+      '<div class="card"><div class="row"><div class="grow"><div class="ttl" style="font-size:13.5px">Storage Container</div>'+
+      '<div class="sub">+150 solid buffer, +300 fluid buffer each</div></div>'+stepper("store", S.store)+'</div>'+
+      '<div class="sub" style="margin-top:8px">Buffers now hold <span class="mono">'+fmt(solidCap())+
+      '</span> of each solid and <span class="mono">'+fmt(fluidCap())+'</span> of each fluid. '+
+      'A full buffer backs the producer up, exactly like a full belt.</div>'+
+      costList(MACH.storage_container.cost)+'</div></div>';
+  }
+  return s;
+}
+function nodeYield(res){
+  let r = 0;
+  for(const id in S.nodes){
+    const nd = S.nodes[id]; const n = NODE_BY_ID[id];
+    if(nd && nd.m && n && n.res === res) r += MACH[nd.m].base * PURITY[n.pur] * nd.clk;
+  }
+  return r;
+}
+function nodeRow(n){
+  const nd = S.nodes[n.id];
+  const isOil = n.res === "crude_oil";
+  const tiers = isOil ? ["oil_extractor"] : ["miner_mk1","miner_mk2","miner_mk3"];
+  const avail = tiers.filter(machUnlocked);
+  let s = '<hr class="dash"><div class="row" style="margin-top:9px;align-items:flex-start;flex-wrap:wrap">'+
+    '<span class="pur '+n.pur+'">'+n.pur+'</span><div class="grow">';
+  if(nd && nd.m){
+    const M = MACH[nd.m];
+    const rate = M.base * PURITY[n.pur] * nd.clk;
+    const key = "node:"+n.id;
+    const eff = RT.eff[key] === undefined ? 1 : RT.eff[key];
+    const w = WHY[RT.why[key] || "run"];
+    const bid = nid();
+    s += '<div class="row"><span class="ttl grow" style="font-size:13px">'+esc(M.n)+'</span>'+
+         '<span class="stat '+w[1]+'" id="'+bid+'s">'+w[0]+'</span></div>'+
+         '<div class="sub"><span class="mono" id="'+bid+'r">'+rt(rate*eff)+'</span> / '+rt(rate)+' per min &middot; '+
+         mw(M.mw*Math.pow(nd.clk,OC_EXP))+'</div>'+
+         '<div class="thru"><i class="belt" id="'+bid+'b" style="width:'+(eff*100)+'%"></i></div>';
+    bind(bid+"s", function(e){
+      const ww = WHY[RT.why[key] || "run"]; e.textContent = ww[0]; e.className = "stat "+ww[1];
+    });
+    bind(bid+"r", function(e){ e.textContent = rt(rate*(RT.eff[key]===undefined?1:RT.eff[key])); });
+    bind(bid+"b", function(e){
+      const ef = RT.eff[key] === undefined ? 1 : RT.eff[key];
+      e.style.width = (ef*100)+"%";
+      e.className = "belt"+(ef < .5 ? " bad" : ef < .95 ? " warn" : "");
+    });
+    s += '</div><div style="display:flex;flex-direction:column;gap:5px">';
+    const up = tiers[tiers.indexOf(nd.m)+1];
+    if(up && machUnlocked(up)) s += '<button class="btn sm" data-act="mup" data-id="'+n.id+'" data-m="'+up+'">Upgrade</button>';
+    s += '<button class="btn sm ghost" data-act="mdel" data-id="'+n.id+'">Remove</button></div>';
+    if(S.un.feat.overclock) s += clockRow("nclk", n.id, nd.clk);
+  } else {
+    s += '<div class="ttl" style="font-size:13px;color:var(--ink-3)">Empty node</div>'+
+         '<div class="sub">'+(isOil?"120":"60")+' &times; '+PURITY[n.pur]+' base yield</div></div>'+
+         '<div style="display:flex;flex-direction:column;gap:5px">';
+    if(!avail.length) s += '<span class="sub">no extractor</span>';
+    avail.forEach(function(m){
+      const ok = canAfford(MACH[m].cost);
+      s += '<button class="btn sm'+(ok?" pri":"")+'" data-act="mset" data-id="'+n.id+'" data-m="'+m+'"'+
+           (ok?"":" disabled")+'>'+esc(MACH[m].n.replace("Miner ","").replace(" Extractor",""))+'</button>';
+    });
+    s += "</div>";
+    if(avail.length && !canAfford(MACH[avail[0]].cost)) s += costList(MACH[avail[0]].cost);
+  }
+  return s+"</div>";
+}
+function clockRow(act, id, clk){
+  const cid = nid();
+  return '<div class="clock" style="flex-basis:100%"><span class="lbl">Clock</span>'+
+    '<input type="range" id="'+cid+'" min="25" max="250" step="5" value="'+Math.round(clk*100)+'" '+
+    'data-chg="'+act+'" data-id="'+id+'" aria-label="Clock speed">'+
+    '<span class="mono" style="font-size:13px;min-width:52px;text-align:right">'+Math.round(clk*100)+'%</span></div>';
+}
+function stepper(act, val, max){
+  const dis = max !== undefined && val >= max;
+  return '<div class="stepper"><button data-act="'+act+'-" '+(val<=0?"disabled":"")+' aria-label="Remove one">&minus;</button>'+
+    '<span class="val">'+val+'</span>'+
+    '<button data-act="'+act+'+" '+(dis?"disabled":"")+' aria-label="Add one">+</button>'+
+    '<button data-act="'+act+'++" '+(dis?"disabled":"")+' style="width:44px;font-size:12px" aria-label="Add ten">+10</button></div>';
+}
+</script>
+
+<script>
+"use strict";
+/* ============================================================
+   TAB: MAKE
+   ============================================================ */
+const MACH_ORDER = ["smelter","foundry","constructor","assembler","manufacturer","refinery"];
+function recipesFor(m){
+  return Object.keys(RECIPES).filter(function(r){ return RECIPES[r].m === m; });
+}
+function tabMake(){
+  let s = "", any = false;
+  MACH_ORDER.forEach(function(m){
+    if(!machUnlocked(m)) return;
+    any = true;
+    const M = MACH[m];
+    const mine = recipesFor(m).filter(function(r){ return S.groups[r] && S.groups[r].c > 0; });
+    let n = 0, p = 0;
+    mine.forEach(function(r){
+      const G = S.groups[r];
+      n += G.c; if(G.on) p += M.mw * G.c * Math.pow(G.clk, OC_EXP);
+    });
+    s += '<div class="sec"><div class="sec-head"><h2>'+esc(M.n)+'</h2><div class="rule"></div>'+
+         '<span class="note mono">'+n+' &middot; '+mw(p)+'</span></div>';
+    if(!mine.length) s += '<div class="empty">No '+esc(M.n.toLowerCase())+' running.</div>';
+    mine.forEach(function(r){ s += groupCard(r); });
+    const avail = recipesFor(m).filter(recUnlocked).length;
+    s += '<button class="btn wide" data-act="pick" data-m="'+m+'">Add production &middot; '+avail+' recipes</button></div>';
+  });
+  if(!any) s += '<div class="empty">No production buildings unlocked yet.</div>';
+  return s;
+}
+function groupCard(rid){
+  const G = S.groups[rid], R = RECIPES[rid], M = MACH[R.m];
+  const key = rid;
+  const eff = G.on ? (RT.eff[key] === undefined ? 1 : RT.eff[key]) : 0;
+  const w = WHY[G.on ? (RT.why[key] || "run") : "off"];
+  const outId = Object.keys(R.out)[0];
+  const maxOut = R.out[outId]*60/R.t * G.c * G.clk;
+  const b = nid();
+  let s = '<div class="card'+(G.on?" lit":"")+'">'+
+    '<div class="row" style="align-items:flex-start"><span style="padding-top:2px">'+ico(outId)+'</span>'+
+    '<div class="grow"><div class="ttl">'+esc(R.n)+'</div>'+
+    '<div class="sub"><span class="mono" id="'+b+'r">'+rt(maxOut*eff)+'</span> / '+rt(maxOut)+
+    ' '+esc(ITEMS[outId].n.toLowerCase())+'/min</div></div>'+
+    '<span class="stat '+w[1]+'" id="'+b+'s">'+w[0]+'</span></div>'+
+    '<div class="thru"><i class="belt" id="'+b+'b" style="width:'+(eff*100)+'%"></i></div>'+
+    flowLine(rid)+
+    '<div class="row" style="margin-top:9px">'+stepper("g:"+rid, G.c)+
+    '<span class="grow"></span>'+
+    '<span class="mono" style="font-size:12px;color:var(--ink-3)">'+
+      mw(M.mw*G.c*Math.pow(G.clk,OC_EXP))+'</span>'+
+    '<button class="btn sm ghost" data-act="gtog" data-id="'+rid+'">'+(G.on?"Pause":"Resume")+'</button></div>';
+  if(S.un.feat.overclock) s += clockRow("gclk", rid, G.clk);
+  s += "</div>";
+  bind(b+"s", function(e){
+    const ww = WHY[S.groups[rid] && !S.groups[rid].on ? "off" : (RT.why[key]||"run")];
+    e.textContent = ww[0]; e.className = "stat "+ww[1];
+  });
+  bind(b+"r", function(e){
+    const ef = (S.groups[rid] && S.groups[rid].on) ? (RT.eff[key]===undefined?1:RT.eff[key]) : 0;
+    e.textContent = rt(maxOut*ef);
+  });
+  bind(b+"b", function(e){
+    const ef = (S.groups[rid] && S.groups[rid].on) ? (RT.eff[key]===undefined?1:RT.eff[key]) : 0;
+    e.style.width = (ef*100)+"%";
+    e.className = "belt"+(ef < .5 ? " bad" : ef < .95 ? " warn" : "");
+  });
+  return s;
+}
+function openPicker(m){
+  const M = MACH[m];
+  const list = recipesFor(m).filter(recUnlocked);
+  let body = '<p>Each '+esc(M.n.toLowerCase())+' costs its build materials and draws <b>'+mw(M.mw)+
+    '</b>. Dismantling refunds the full cost.</p>'+costList(M.cost);
+  if(!list.length) body += '<div class="empty">No recipes unlocked for this building yet.</div>';
+  list.forEach(function(r){
+    const R = RECIPES[r];
+    const running = S.groups[r] && S.groups[r].c > 0;
+    const ok = canAfford(M.cost);
+    body += '<button class="pick" data-act="gadd" data-id="'+r+'"'+(ok?"":" disabled")+'>'+
+      '<div class="row"><span class="ttl grow" style="font-size:13.5px">'+esc(R.n)+'</span>'+
+      (running?'<span class="stat st-run">'+S.groups[r].c+' RUNNING</span>':
+               '<span class="stat st-off">'+(ok?"BUILD":"NEED PARTS")+'</span>')+'</div>'+
+      flowLine(r)+'</button>';
+  });
+  sheet(M.n, body);
+}
+
+/* ============================================================
+   TAB: POWER
+   ============================================================ */
+const GEN_ORDER = ["biomass_burner","coal_generator","fuel_generator"];
+function tabPower(){
+  const pct = RT.capMW > 0 ? Math.min(100, RT.demandMW/RT.capMW*100) : (RT.demandMW>0?100:0);
+  let s = '<div class="sec"><div class="sec-head"><h2>Grid</h2><div class="rule"></div>'+
+    '<span class="note">satisfaction <span class="mono" id="pwSat">'+Math.round(RT.sat*100)+'%</span></span></div>'+
+    '<div class="card lit"><div class="row"><div class="grow">'+
+    '<div class="lbl">Draw / Capacity</div>'+
+    '<div class="ttl mono" style="font-size:19px;margin-top:2px" id="pwNum">'+
+      mw(RT.demandMW)+' / '+mw(RT.capMW)+'</div></div>'+
+    '<span class="stat '+(RT.sat<.995?"st-pow":"st-run")+'" id="pwState">'+
+      (RT.sat<.995?"BROWNOUT":"NOMINAL")+'</span></div>'+
+    '<div class="bar" style="height:12px;margin-top:9px"><i class="bar-fill stripe" id="pwBar" style="width:'+pct+'%"></i></div>'+
+    '<div class="sub" style="margin-top:7px">A shortfall does not cut the grid off. Every machine slows to the '+
+    'fraction of power it can get, so output falls smoothly until you add generators. The hub holds back '+
+    '<span class="mono">'+HUB_MW+' MW</span> of reserve that never runs out, enough to restart a water '+
+    'extractor or a miner after the fuel does.</div></div></div>';
+  bind("pwSat", function(e){ e.textContent = Math.round(RT.sat*100)+"%"; });
+  bind("pwNum", function(e){ e.textContent = mw(RT.demandMW)+" / "+mw(RT.capMW); });
+  bind("pwState", function(e){
+    const bad = RT.sat < .995;
+    e.textContent = bad ? "BROWNOUT" : "NOMINAL"; e.className = "stat "+(bad?"st-pow":"st-run");
+  });
+  bind("pwBar", function(e){
+    e.style.width = (RT.capMW>0 ? Math.min(100, RT.demandMW/RT.capMW*100) : (RT.demandMW>0?100:0))+"%";
+  });
+
+  s += '<div class="sec"><div class="sec-head"><h2>Generators</h2><div class="rule"></div></div>';
+  let any = false;
+  GEN_ORDER.forEach(function(g){
+    if(!machUnlocked(g)) return;
+    any = true;
+    const M = MACH[g], G = S.gens[g] || {c:0, f:M.fuels[0]};
+    const out = (-M.mw)*G.c;
+    const burn = 60*(-M.mw)/FUEL_MJ[G.f]*G.c;
+    const short = RT.genShort[g];
+    let opts = "";
+    M.fuels.forEach(function(f){
+      if(!S.un.rec[f] && !have(f) && f !== M.fuels[0] && !(f==="coal"||f==="fuel")) { /* still list it */ }
+      opts += '<option value="'+f+'"'+(f===G.f?" selected":"")+'>'+esc(ITEMS[f].n)+' &middot; '+
+        FUEL_MJ[f]+' MJ</option>';
+    });
+    s += '<div class="card'+(G.c?" lit":"")+'"><div class="row" style="align-items:flex-start">'+
+      '<div class="grow"><div class="ttl">'+esc(M.n)+'</div>'+
+      '<div class="sub">'+mw(-M.mw)+' each &middot; total <span class="mono">'+mw(out)+'</span></div></div>'+
+      (G.c && short ? '<span class="stat st-pow">NO '+short.toUpperCase()+'</span>' : '')+'</div>'+
+      '<div class="row" style="margin-top:9px;flex-wrap:wrap;gap:8px">'+stepper("gen:"+g, G.c)+
+      '<select data-chg="fuel" data-id="'+g+'" class="grow" aria-label="Fuel for '+esc(M.n)+'">'+opts+'</select></div>'+
+      '<div class="sub" style="margin-top:8px">Burns up to <span class="mono">'+rt(burn)+'</span> '+
+      esc(ITEMS[G.f].n.toLowerCase())+'/min at full load'+
+      (M.water ? ' plus <span class="mono">'+rt(M.water*G.c)+'</span> water/min' : '')+
+      '. Idle generators burn less.</div>'+
+      costList(M.cost)+'</div>';
+  });
+  if(!any) s += '<div class="empty">No generators unlocked.</div>';
+  s += "</div>";
+
+  /* fuel stock */
+  const fuels = [];
+  GEN_ORDER.forEach(function(g){ if(machUnlocked(g)) MACH[g].fuels.forEach(function(f){ if(fuels.indexOf(f)<0) fuels.push(f); }); });
+  if(MACH.coal_generator && machUnlocked("coal_generator") && fuels.indexOf("water")<0) fuels.push("water");
+  s += '<div class="sec"><div class="sec-head"><h2>Fuel Stock</h2><div class="rule"></div></div><div class="inv">'+
+    fuels.map(function(f){ return slotFor(f); }).join("")+'</div></div>';
+  return s;
+}
+
+/* ============================================================
+   TAB: DEPOT
+   ============================================================ */
+function vCost(){ return Math.round(500*Math.pow(S.vbought+1, 1.8)); }
+function tabDepot(){
+  let s = "";
+
+  /* sink */
+  if(machUnlocked("resource_sink")){
+    const M = MACH.resource_sink;
+    const eff = RT.eff.sink === undefined ? 0 : RT.eff.sink;
+    const thru = M.base*S.sink.c*eff;
+    const ppm = thru * (ITEMS[S.sink.item] ? ITEMS[S.sink.item].p : 0);
+    let opts = "";
+    ITEM_IDS.forEach(function(i){
+      if(ITEMS[i].fl || !ITEMS[i].p) return;
+      opts += '<option value="'+i+'"'+(i===S.sink.item?" selected":"")+'>'+esc(ITEMS[i].n)+
+        ' &middot; '+fmt(ITEMS[i].p)+' pts</option>';
+    });
+    s += '<div class="sec"><div class="sec-head"><h2>Resource Sink</h2><div class="rule"></div>'+
+      '<span class="note mono" id="dpPts">'+fmt(S.pts)+' pts</span></div>'+
+      '<div class="card'+(S.sink.c?" lit":"")+'"><div class="row"><div class="grow">'+
+      '<div class="ttl">Resource Sink</div><div class="sub">'+M.base+'/min each &middot; '+mw(M.mw)+' each</div></div>'+
+      stepper("sink", S.sink.c)+'</div>'+
+      '<div class="row" style="margin-top:9px"><select data-chg="sinkitem" class="grow" aria-label="Item to sink">'+opts+'</select></div>'+
+      '<div class="sub" style="margin-top:8px">Consuming <span class="mono" id="dpThru">'+rt(thru)+
+      '</span>/min for <span class="mono" id="dpPpm">'+fmt(ppm)+'</span> points/min. '+
+      'Sink surplus only, or you will starve your own factory.</div>'+costList(M.cost)+'</div></div>';
+    bind("dpPts", function(e){ e.textContent = fmt(S.pts)+" pts"; });
+    bind("dpThru", function(e){ e.textContent = rt(M.base*S.sink.c*(RT.eff.sink===undefined?0:RT.eff.sink)); });
+    bind("dpPpm", function(e){
+      const t = M.base*S.sink.c*(RT.eff.sink===undefined?0:RT.eff.sink);
+      e.textContent = fmt(t*(ITEMS[S.sink.item]?ITEMS[S.sink.item].p:0));
+    });
+  }
+
+  /* catalog */
+  if(S.un.feat.catalog){
+    const c = vCost();
+    const canV = S.pts >= c;
+    s += '<div class="sec"><div class="sec-head"><h2>Requisition Catalog</h2><div class="rule"></div>'+
+      '<span class="note mono">'+S.vouch+' vouchers</span></div>'+
+      '<div class="card"><div class="row"><div class="grow"><div class="ttl" style="font-size:13.5px">Redeem a voucher</div>'+
+      '<div class="sub"><span class="mono" id="dpNeed">'+fmt(S.pts)+' / '+fmt(c)+'</span> sink points</div>'+
+      '<div class="prog"><i id="dpNeedBar" style="width:'+Math.min(100,S.pts/c*100)+'%"></i></div></div>'+
+      '<button class="btn '+(canV?"pri":"")+'" data-act="voucher"'+(canV?"":" disabled")+'>Redeem</button></div></div>';
+    bind("dpNeed", function(e){ e.textContent = fmt(S.pts)+" / "+fmt(vCost()); });
+    bind("dpNeedBar", function(e){ e.style.width = Math.min(100, S.pts/vCost()*100)+"%"; });
+    CATALOG.forEach(function(c2){
+      const owned = S.cat[c2.id] || 0;
+      const max = c2.repeat || 1;
+      const maxed = owned >= max;
+      const ok = !maxed && S.vouch > 0;
+      s += '<div class="card tight"><div class="row" style="align-items:flex-start">'+
+        '<div class="grow"><div class="ttl" style="font-size:13.5px">'+esc(c2.n)+
+        (c2.repeat?' <span class="mono" style="font-size:12px;color:var(--ink-3)">'+owned+'/'+max+'</span>':'')+'</div>'+
+        '<div class="sub">'+c2.d+'</div></div>'+
+        (maxed && !c2.repeat ? '<span class="stat st-run">OWNED</span>' :
+          '<button class="btn sm '+(ok?"pri":"")+'" data-act="buy" data-id="'+c2.id+'"'+(ok?"":" disabled")+'>1 voucher</button>')+
+        '</div>'+(RECIPES[c2.id] && !S.un.rec[c2.id] ? flowLine(c2.id) : "")+'</div>';
+    });
+    s += "</div>";
+  }
+
+  /* inventory */
+  const shown = ITEM_IDS.filter(function(i){
+    if(have(i) > 0.01) return true;
+    for(const r in S.groups){ if(S.groups[r].c && (RECIPES[r].out[i] || RECIPES[r].in[i])) return true; }
+    return !!S.un.rec[i];
+  });
+  s += '<div class="sec"><div class="sec-head"><h2>Inventory</h2><div class="rule"></div>'+
+    '<span class="note">buffer '+fmt(solidCap())+' / '+fmt(fluidCap())+'</span></div>'+
+    '<div class="inv">'+shown.map(function(i){ return slotFor(i); }).join("")+'</div></div>';
+
+  /* system */
+  s += '<div class="sec"><div class="sec-head"><h2>Save</h2><div class="rule"></div></div>'+
+    '<div class="card tight"><div class="sub">Progress is stored in this browser and keeps running for up to '+
+    'four hours while the page is closed.</div>'+
+    '<div class="row" style="margin-top:9px;gap:7px"><button class="btn sm grow" data-act="backup">Backup code</button>'+
+    '<button class="btn sm grow" data-act="reset">New save</button></div></div></div>';
+  return s;
+}
+function slotFor(i){
+  const I = ITEMS[i], cap = capOf(i), n = have(i);
+  const net = (RT.flowOut[i]||0) - (RT.flowIn[i]||0);
+  const b = nid();
+  const s = '<div class="slot">'+ico(i)+'<div class="grow" style="min-width:0">'+
+    '<div class="nm">'+esc(I.n)+'</div>'+
+    '<div class="qt" id="'+b+'q">'+qty(n)+'</div>'+
+    '<div class="rt '+(net>0.05?"up":net<-0.05?"dn":"flat")+'" id="'+b+'n">'+
+      (net>0.05?"+":"")+rt(net)+'/m</div>'+
+    '<div class="capbar"><i id="'+b+'c" class="'+(n>=cap-1?"max":"")+'" style="width:'+Math.min(100,n/cap*100)+'%"></i></div>'+
+    '</div></div>';
+  bind(b+"q", function(e){ e.textContent = qty(have(i)); });
+  bind(b+"n", function(e){
+    const nt = (RT.flowOut[i]||0) - (RT.flowIn[i]||0);
+    e.textContent = (nt>0.05?"+":"")+rt(nt)+"/m";
+    e.className = "rt "+(nt>0.05?"up":nt<-0.05?"dn":"flat");
+  });
+  bind(b+"c", function(e){
+    const q = have(i), cp = capOf(i);
+    e.style.width = Math.min(100, q/cp*100)+"%";
+    e.className = q >= cp-1 ? "max" : "";
+  });
+  return s;
+}
+</script>
+
+<script>
+"use strict";
+/* ============================================================
+   ACTIONS
+   ============================================================ */
+function adjustBuild(machId, delta, get, set){
+  const M = MACH[machId];
+  if(delta < 0){
+    const n = Math.min(-delta, get());
+    if(!n) return;
+    set(get()-n);
+    for(let i=0; i<n; i++) refund(M.cost);
+    toast("Dismantled "+n+" "+M.n+(n>1?"s":"")+" - materials refunded");
+  } else {
+    let built = 0;
+    for(let i=0; i<delta; i++){ if(!canAfford(M.cost)) break; payCost(M.cost); built++; }
+    if(!built){ toast("Not enough materials for a "+M.n, 1); return; }
+    set(get()+built);
+    if(built < delta) toast("Built "+built+" of "+delta+" - out of materials");
+  }
+}
+function groupCount(rid){ return S.groups[rid] ? S.groups[rid].c : 0; }
+function setGroupCount(rid, n){
+  if(n <= 0){ delete S.groups[rid]; return; }
+  if(!S.groups[rid]) S.groups[rid] = {c:0, clk:1, on:1};
+  S.groups[rid].c = n;
+}
+function handCraft(rid){
+  const R = RECIPES[rid];
+  for(const k in R.in) if(have(k) < R.in[k]) { toast("Missing "+ITEMS[k].n, 1); return; }
+  for(const k in R.in) S.inv[k] = have(k) - R.in[k];
+  for(const k in R.out) S.inv[k] = Math.min(capOf(k), have(k) + R.out[k]);
+}
+function depositInto(cost, store){
+  let moved = 0, done = true;
+  for(const k in cost){
+    const remain = cost[k] - (store[k]||0);
+    if(remain <= 0) continue;
+    const give = Math.min(remain, Math.floor(have(k)+1e-9));
+    if(give > 0){ S.inv[k] = have(k) - give; store[k] = (store[k]||0) + give; moved += give; }
+    if((store[k]||0) < cost[k]) done = false;
+  }
+  return {moved:moved, done:done};
+}
+function doMilestone(mid){
+  let m = null;
+  for(let i=0;i<MILESTONES.length;i++) if(MILESTONES[i].id === mid) m = MILESTONES[i];
+  if(!m || S.done[mid]) return;
+  const store = S.mdep[mid] = S.mdep[mid] || {};
+  const r = depositInto(m.cost, store);
+  if(r.done){
+    S.done[mid] = 1; delete S.mdep[mid];
+    m.un.forEach(function(u){ const p = u.split(":"); S.un[p[0]][p[1]] = 1; });
+    toast(m.n+" complete");
+  } else if(r.moved) toast("Deposited "+fmt(r.moved)+" parts");
+  else toast("Nothing in stock to deposit", 1);
+}
+function doPhase(){
+  const ph = PHASES[S.phase];
+  if(!ph) return;
+  const r = depositInto(ph.cost, S.pdep);
+  let done = true;
+  for(const k in ph.cost) if((S.pdep[k]||0) < ph.cost[k]) done = false;
+  if(done){
+    S.phase++; S.pdep = {};
+    if(S.phase >= 4) toast("Ascent Elevator complete. Project finished.");
+    else toast(ph.n+" launched - Tier "+(S.phase*2+1)+" unlocked");
+  } else if(r.moved) toast("Delivered "+fmt(r.moved)+" parts");
+  else toast("Nothing in stock to deliver", 1);
+}
+
+view.addEventListener("click", function(e){
+  const t = e.target.closest("[data-act]");
+  if(!t || t.disabled) return;
+  const act = t.getAttribute("data-act");
+  const id  = t.getAttribute("data-id");
+
+  /* steppers */
+  let d = 0, base = act;
+  if(/\+\+$/.test(act)){ d = 10; base = act.slice(0,-2); }
+  else if(/\+$/.test(act)){ d = 1; base = act.slice(0,-1); }
+  else if(/-$/.test(act)){ d = -1; base = act.slice(0,-1); }
+  if(d !== 0){
+    if(base === "water") adjustBuild("water_extractor", d, function(){return S.water;}, function(v){S.water=v;});
+    else if(base === "store") adjustBuild("storage_container", d, function(){return S.store;}, function(v){S.store=v;});
+    else if(base === "sink") adjustBuild("resource_sink", d, function(){return S.sink.c;}, function(v){S.sink.c=v;});
+    else if(base.indexOf("g:") === 0){
+      const rid = base.slice(2);
+      adjustBuild(RECIPES[rid].m, d, function(){return groupCount(rid);}, function(v){setGroupCount(rid,v);});
+    }
+    else if(base.indexOf("gen:") === 0){
+      const g = base.slice(4);
+      if(!S.gens[g]) S.gens[g] = {c:0, f:MACH[g].fuels[0]};
+      adjustBuild(g, d, function(){return S.gens[g].c;}, function(v){S.gens[g].c=v;});
+    }
+    render(); return;
+  }
+
+  switch(act){
+    case "tap": {
+      const n = TAP[id] || 1;
+      S.inv[id] = Math.min(capOf(id), have(id) + n);
+      S.stats.tapped += n;
+      render(); return;
+    }
+    case "craft": handCraft(id); render(); return;
+    case "mset": case "mup": {
+      const m = t.getAttribute("data-m");
+      const cur = S.nodes[id];
+      if(!canAfford(MACH[m].cost)){ toast("Not enough materials for a "+MACH[m].n, 1); return; }
+      payCost(MACH[m].cost);
+      if(cur && cur.m) refund(MACH[cur.m].cost);
+      S.nodes[id] = {m:m, clk: cur ? cur.clk : 1};
+      render(); return;
+    }
+    case "mdel": {
+      const cur = S.nodes[id];
+      if(cur && cur.m) refund(MACH[cur.m].cost);
+      delete S.nodes[id];
+      toast("Extractor dismantled - materials refunded");
+      render(); return;
+    }
+    case "gtog": if(S.groups[id]) S.groups[id].on = S.groups[id].on ? 0 : 1; render(); return;
+    case "pick": openPicker(t.getAttribute("data-m")); return;
+    case "gadd": {
+      const M = RECIPES[id].m;
+      adjustBuild(M, 1, function(){return groupCount(id);}, function(v){setGroupCount(id,v);});
+      closeSheet(); TAB = "make"; syncTabs(); render(); return;
+    }
+    case "mdep": doMilestone(id); render(); return;
+    case "phase": doPhase(); render(); return;
+    case "voucher": {
+      const c = vCost();
+      if(S.pts < c){ toast("Not enough sink points", 1); return; }
+      S.pts -= c; S.vouch++; S.vbought++;
+      toast("Voucher redeemed");
+      render(); return;
+    }
+    case "buy": {
+      let item = null;
+      for(let i=0;i<CATALOG.length;i++) if(CATALOG[i].id === id) item = CATALOG[i];
+      if(!item) return;
+      const owned = S.cat[id] || 0;
+      if(owned >= (item.repeat || 1)){ toast("Already acquired", 1); return; }
+      if(S.vouch < 1){ toast("No vouchers left", 1); return; }
+      S.vouch--; S.cat[id] = owned + 1;
+      if(RECIPES[id]) S.un.rec[id] = 1;
+      toast(item.n+" acquired");
+      render(); return;
+    }
+    case "backup": openBackup(); return;
+    case "reset": openReset(); return;
+  }
+});
+
+/* sliders and selects */
+let dragging = false;
+document.addEventListener("pointerdown", function(e){
+  if(e.target.matches && e.target.matches('input[type=range]')) dragging = true;
+});
+document.addEventListener("pointerup", function(){ dragging = false; });
+document.addEventListener("input", function(e){
+  const el = e.target;
+  const chg = el.getAttribute && el.getAttribute("data-chg");
+  if(!chg) return;
+  const id = el.getAttribute("data-id");
+  if(chg === "nclk" || chg === "gclk"){
+    const v = (+el.value)/100;
+    if(chg === "nclk" && S.nodes[id]) S.nodes[id].clk = v;
+    if(chg === "gclk" && S.groups[id]) S.groups[id].clk = v;
+    const lab = el.parentNode.querySelector(".mono");
+    if(lab) lab.textContent = Math.round(v*100)+"%";
+  }
+});
+document.addEventListener("change", function(e){
+  const el = e.target;
+  const chg = el.getAttribute && el.getAttribute("data-chg");
+  if(!chg) return;
+  const id = el.getAttribute("data-id");
+  if(chg === "fuel"){ if(!S.gens[id]) S.gens[id] = {c:0, f:el.value}; else S.gens[id].f = el.value; render(); }
+  else if(chg === "sinkitem"){ S.sink.item = el.value; render(); }
+  else if(chg === "nclk" || chg === "gclk"){ dragging = false; render(); }
+});
+
+/* ---------- sheets ---------- */
+function openBackup(){
+  save();
+  let code = "";
+  try{ code = btoa(encodeURIComponent(JSON.stringify(S))); }catch(err){ code = ""; }
+  sheet("Backup code",
+    '<p>Copy this code to move your factory to another browser. Paste one in and load it to restore.</p>'+
+    '<textarea id="bkText" readonly rows="5" style="width:100%;font-family:JetBrains Mono,monospace;font-size:11px;'+
+    'background:var(--steel-2);color:var(--ink-2);border:1px solid var(--line);padding:8px;resize:vertical">'+esc(code)+'</textarea>'+
+    '<button class="btn wide" id="bkCopy">Copy code</button>'+
+    '<hr class="dash"><p>Restore from a code:</p>'+
+    '<textarea id="bkIn" rows="3" placeholder="paste code" style="width:100%;font-family:JetBrains Mono,monospace;'+
+    'font-size:11px;background:var(--steel-2);color:var(--ink);border:1px solid var(--line);padding:8px;resize:vertical"></textarea>'+
+    '<button class="btn wide" id="bkLoad">Load code</button>',
+    function(root){
+      root.querySelector("#bkCopy").addEventListener("click", function(){
+        const ta = root.querySelector("#bkText");
+        ta.select(); ta.setSelectionRange(0, 99999);
+        let ok = false;
+        try{ ok = document.execCommand("copy"); }catch(err){}
+        if(navigator.clipboard && !ok) navigator.clipboard.writeText(ta.value).then(function(){ toast("Code copied"); });
+        else toast(ok ? "Code copied" : "Select the code and copy it", !ok);
+      });
+      root.querySelector("#bkLoad").addEventListener("click", function(){
+        const v = root.querySelector("#bkIn").value.trim();
+        if(!v) return;
+        try{
+          const o = JSON.parse(decodeURIComponent(atob(v)));
+          if(!o || o.v !== 1) throw 0;
+          S = o; save(); closeSheet(); render();
+          toast("Factory restored");
+        }catch(err){ toast("That code could not be read", 1); }
+      });
+    });
+}
+function openReset(){
+  sheet("Start a new save",
+    '<p>This erases the current factory and starts again from the drop pod. There is no undo, so take a '+
+    '<b>backup code</b> first if you might want it back.</p>'+
+    '<button class="btn wide pri" id="rsGo">Erase and start over</button>',
+    function(root){
+      root.querySelector("#rsGo").addEventListener("click", function(){
+        S = freshState(); save(); closeSheet(); TAB = "hub"; syncTabs(); render();
+        toast("New save started");
+      });
+    });
+}
+function openHelp(){
+  sheet("How it runs",
+    '<p><b>Everything is a rate.</b> Machines are described in units per minute. A smelter turns 30 iron ore '+
+    'into 30 iron ingots a minute; a constructor turns 30 of those ingots into 20 iron plates. Match the rates '+
+    'and nothing starves.</p>'+
+    '<p><b>Buffers replace belts.</b> Every item has a shared buffer. Producers slow down when it is full and '+
+    'consumers slow down when it is empty, so a card reading <span class="stat st-full">BACKED UP</span> means '+
+    'you built too much of that step and <span class="stat st-star">STARVED</span> means too little of the one '+
+    'feeding it.</p>'+
+    '<p><b>Power throttles, it does not trip.</b> If draw exceeds capacity, every machine runs at the fraction '+
+    'of power available. Burn leaves to bootstrap, convert them to biomass for triple the energy, then get to '+
+    'coal as fast as you can.</p>'+
+    '<p><b>Overclocking is not free.</b> Power scales with clock<sup>1.32</sup>, so 250&#37; speed costs about '+
+    '3.4&times; the power. Underclocking to 50&#37; costs only 40&#37;, which is the cheap way to trim a '+
+    'byproduct back into balance.</p>'+
+    '<p><b>Byproducts clog.</b> Refining plastic makes heavy oil residue. If nothing consumes it the buffer '+
+    'fills and the refinery stops. Residual Fuel and Petroleum Coke are the way out.</p>'+
+    '<p><b>The loop.</b> Complete Hub milestones to unlock buildings, recipes and nodes. Deliver elevator '+
+    'phases to open the next tier band. Sink surplus parts for points, redeem points for vouchers, and spend '+
+    'vouchers on alternate recipes with far better ratios.</p>');
+}
+document.getElementById("helpBtn").addEventListener("click", openHelp);
+
+/* ============================================================
+   RENDER LOOP
+   ============================================================ */
+const TABS = {hub:tabHub, mine:tabMine, make:tabMake, power:tabPower, depot:tabDepot};
+function syncTabs(){
+  document.querySelectorAll(".tab").forEach(function(b){
+    b.setAttribute("aria-selected", b.getAttribute("data-tab") === TAB ? "true" : "false");
+  });
+}
+document.querySelectorAll(".tab").forEach(function(b){
+  b.addEventListener("click", function(){
+    TAB = b.getAttribute("data-tab");
+    syncTabs(); main.scrollTop = 0; render(true);
+  });
+});
+function render(top){
+  const sc = top ? 0 : main.scrollTop;
+  LIVE = [];
+  view.innerHTML = TABS[TAB]();
+  const out = [];
+  for(let i=0; i<LIVE.length; i++){
+    const el = document.getElementById(LIVE[i].id);
+    if(el) out.push({el:el, fn:LIVE[i].fn});
+  }
+  LIVE = out;
+  main.scrollTop = sc;
+  tickUI();
+}
+function tickUI(){
+  for(let i=0; i<LIVE.length; i++) LIVE[i].fn(LIVE[i].el);
+  updateHud();
+}
+const hudTier = document.getElementById("hudTier");
+const hudPow  = document.getElementById("hudPow");
+const hudBar  = document.getElementById("hudBar");
+const hudCap  = document.getElementById("hudCap");
+const hudState= document.getElementById("hudState");
+const hudSub  = document.getElementById("hudSub");
+function updateHud(){
+  const m = Math.max(RT.capMW, RT.demandMW, 1);
+  hudTier.textContent = String(Math.min(maxTier(), 8));
+  hudPow.textContent = mw(RT.demandMW)+" / "+mw(RT.capMW);
+  hudBar.style.width = (RT.demandMW/m*100)+"%";
+  hudCap.style.left = (RT.capMW/m*100)+"%";
+  const brown = RT.sat < .995;
+  document.body.classList.toggle("brownout", brown);
+  hudState.textContent = brown ? "Brownout" : (RT.demandMW < 0.01 ? "Idle" : "Nominal");
+  hudState.className = "stat "+(brown ? "st-pow" : RT.demandMW < 0.01 ? "st-off" : "st-run");
+  hudBar.classList.toggle("stripe", RT.demandMW > 0.01);
+  hudSub.textContent = S.phase >= 4 ? "Project Ascent complete" : "Arclight Industries";
+}
+
+let lastScroll = 0;
+main.addEventListener("scroll", function(){ lastScroll = Date.now(); }, {passive:true});
+
+let lastT = performance.now();
+let sinceRender = 0;
+setInterval(function(){
+  const now = performance.now();
+  let dt = (now - lastT)/1000;
+  lastT = now;
+  if(dt < 0) dt = 0;
+  if(dt > OFFLINE_CAP) dt = OFFLINE_CAP;
+  advance(dt);
+  tickUI();
+  sinceRender += dt;
+  if(sinceRender > 4 && !dragging && !document.querySelector(".scrim") && Date.now()-lastScroll > 1200){
+    sinceRender = 0; render();
+  }
+}, 200);
+setInterval(save, 5000);
+document.addEventListener("visibilitychange", function(){
+  if(document.hidden) save();
+  else { lastT = performance.now() - 1; }
+});
+window.addEventListener("pagehide", save);
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+function start(hot){
+  let loaded = null;
+  if(hot && hot.save){ try{ loaded = JSON.parse(hot.save); }catch(e){} }
+  if(!loaded) loaded = load();
+  if(loaded) S = loaded;
+  const away = applyOffline();
+  advance(1);
+  syncTabs(); render(true);
+  if(away && away.gained.length){
+    sheet("While you were away",
+      '<p>The factory ran for <b>'+dur(away.sec)+'</b> and produced:</p>'+
+      '<div class="inv">'+away.gained.map(function(g){
+        return '<div class="slot">'+ico(g.id)+'<div class="grow"><div class="nm">'+esc(ITEMS[g.id].n)+'</div>'+
+          '<div class="qt">+'+qty(g.d)+'</div></div></div>';
+      }).join("")+'</div>'+
+      (away.pts > 1 ? '<p>Resource sink banked <b>'+fmt(away.pts)+'</b> points.</p>' : '')+
+      '<p style="color:var(--ink-3);font-size:12px">Offline production runs for up to four hours and stops '+
+      'when a generator runs out of fuel.</p>');
+  }
+  try{
+    if(window.claude && window.claude.hot && window.claude.hot.snapshot){
+      window.claude.hot.snapshot(function(){ return {save: JSON.stringify(S)}; });
+    }
+  }catch(e){}
+}
+try{
+  if(window.claude && window.claude.hot && window.claude.hot.ready) window.claude.hot.ready(start);
+  else start((window.claude && window.claude.hot && window.claude.hot.data) || {});
+}catch(e){ start({}); }
+</script>
